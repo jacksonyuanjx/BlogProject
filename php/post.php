@@ -29,7 +29,7 @@
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script><![endif]-->
   </head>
   <body>
-    <header class="header">
+  <header class="header">
       <!-- Main Navbar-->
       <nav class="navbar navbar-expand-lg">
         <div class="search-area">
@@ -50,24 +50,26 @@
         <div class="container">
           <!-- Navbar Brand -->
           <div class="navbar-header d-flex align-items-center justify-content-between">
-            <!-- Navbar Brand --><a href="../index.php" class="navbar-brand">Bootstrap Blog</a>
+            <!-- Navbar Brand --><a href="index.php" class="navbar-brand">BlogProject</a>
             <!-- Toggle Button-->
             <button type="button" data-toggle="collapse" data-target="#navbarcollapse" aria-controls="navbarcollapse" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"><span></span><span></span><span></span></button>
           </div>
           <!-- Navbar Menu -->
           <div id="navbarcollapse" class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item"><a href="../index.php" class="nav-link ">Home</a>
-              </li>
-              <li class="nav-item"><a href="blog.html" class="nav-link ">Blog</a>
-              </li>
-              <li class="nav-item"><a href="post.html" class="nav-link active ">Post</a>
-              </li>
-              <li class="nav-item"><a href="login.html" class="nav-link ">Login</a>
-              </li>
+              <li class="nav-item"><a href="../index.php" class="nav-link active ">Home</a></li>
+              <li class="nav-item"><a href="blog.php" class="nav-link ">Blog</a></li>
+              <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li>
+              <li class="nav-item"><a href="newPost.php" class="nav-link ">New Post</a></li>
+              <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
+                <li class="nav-item"><a href="profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']?></a></li>
+                <li class="nav-item"><a href="logout.php" class="nav-link">Logout</a></li>
+              <?php elseif(!isset($_SESSION['loggedin']) && !isset($_SESSION['name'])): ?>
+                <li class="nav-item"><a href="login.php" class="nav-link ">Login</a></li>
+              <?php endif; ?>
             </ul>
-            <div class="navbar-text"><a href="#" class="search-btn"><i class="icon-search-1"></i></a></div>
-            <ul class="langs navbar-text"><a href="#" class="active">EN</a><span>           </span><a href="#">ES</a></ul>
+            <div class="navbar-text"><a href="php/#" class="search-btn"><i class="icon-search-1"></i></a></div>
+            <!-- <ul class="langs navbar-text"><a href="#" class="active">EN</a><span>           </span><a href="#">ES</a></ul> -->
           </div>
         </div>
       </nav>
@@ -78,14 +80,14 @@
         <main class="post blog-post col-lg-8"> 
           <div class="container">
             <div class="post-single">
-              <div class="post-thumbnail"><img src="img/blog-post-3.jpeg" alt="..." class="img-fluid"></div>
+              <div class="post-thumbnail"><img src="../img/blog-post-3.jpeg" alt="..." class="img-fluid"></div>
               <div class="post-details">
                 <div class="post-meta d-flex justify-content-between">
                   <div class="category"><a href="#">Business</a><a href="#">Financial</a></div>
                 </div>
                 <h1>Diversity in Engineering: The Effect on Questions<a href="#"><i class="fa fa-bookmark-o"></i></a></h1>
                 <div class="post-footer d-flex align-items-center flex-column flex-sm-row"><a href="#" class="author d-flex align-items-center flex-wrap">
-                    <div class="avatar"><img src="img/avatar-1.jpg" alt="..." class="img-fluid"></div>
+                    <div class="avatar"><img src="../img/avatar-1.jpg" alt="..." class="img-fluid"></div>
                     <div class="title"><span>John Doe</span></div></a>
                   <div class="d-flex align-items-center flex-wrap">       
                     <div class="date"><i class="icon-clock"></i> 2 months ago</div>
@@ -96,7 +98,7 @@
                 <div class="post-body">
                   <p class="lead">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
                   <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                  <p> <img src="img/featured-pic-3.jpeg" alt="..." class="img-fluid"></p>
+                  <p> <img src="../img/featured-pic-3.jpeg" alt="..." class="img-fluid"></p>
                   <h3>Lorem Ipsum Dolor</h3>
                   <p>div Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda temporibus iusto voluptates deleniti similique rerum ducimus sint ex odio saepe. Sapiente quae pariatur ratione quis perspiciatis deleniti accusantium</p>
                   <blockquote class="blockquote">
@@ -124,7 +126,7 @@
                   <div class="comment">
                     <div class="comment-header d-flex justify-content-between">
                       <div class="user d-flex align-items-center">
-                        <div class="image"><img src="img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
+                        <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
                         <div class="title"><strong>Jabi Hernandiz</strong><span class="date">May 2016</span></div>
                       </div>
                     </div>
@@ -135,7 +137,7 @@
                   <div class="comment">
                     <div class="comment-header d-flex justify-content-between">
                       <div class="user d-flex align-items-center">
-                        <div class="image"><img src="img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
+                        <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
                         <div class="title"><strong>Nikolas</strong><span class="date">May 2016</span></div>
                       </div>
                     </div>
@@ -146,7 +148,7 @@
                   <div class="comment">
                     <div class="comment-header d-flex justify-content-between">
                       <div class="user d-flex align-items-center">
-                        <div class="image"><img src="img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
+                        <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
                         <div class="title"><strong>John Doe</strong><span class="date">May 2016</span></div>
                       </div>
                     </div>
@@ -200,7 +202,7 @@
             </header>
             <div class="blog-posts"><a href="#">
                 <div class="item d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-1.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/small-thumbnail-1.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
                     <div class="d-flex align-items-center">
                       <div class="views"><i class="icon-eye"></i> 500</div>
@@ -209,7 +211,7 @@
                   </div>
                 </div></a><a href="#">
                 <div class="item d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-2.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/small-thumbnail-2.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
                     <div class="d-flex align-items-center">
                       <div class="views"><i class="icon-eye"></i> 500</div>
@@ -218,7 +220,7 @@
                   </div>
                 </div></a><a href="#">
                 <div class="item d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
                     <div class="d-flex align-items-center">
                       <div class="views"><i class="icon-eye"></i> 500</div>
@@ -294,15 +296,15 @@
           <div class="col-md-4">
             <div class="latest-posts"><a href="#">
                 <div class="post d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-1.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/small-thumbnail-1.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Hotels for all budgets</strong><span class="date last-meta">October 26, 2016</span></div>
                 </div></a><a href="#">
                 <div class="post d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-2.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/small-thumbnail-2.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Great street atrs in London</strong><span class="date last-meta">October 26, 2016</span></div>
                 </div></a><a href="#">
                 <div class="post d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Best coffee shops in Sydney</strong><span class="date last-meta">October 26, 2016</span></div>
                 </div></a></div>
           </div>

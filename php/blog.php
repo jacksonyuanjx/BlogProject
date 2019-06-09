@@ -29,7 +29,7 @@
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script><![endif]-->
   </head>
   <body>
-    <header class="header">
+  <header class="header">
       <!-- Main Navbar-->
       <nav class="navbar navbar-expand-lg">
         <div class="search-area">
@@ -50,24 +50,26 @@
         <div class="container">
           <!-- Navbar Brand -->
           <div class="navbar-header d-flex align-items-center justify-content-between">
-            <!-- Navbar Brand --><a href="../index.php" class="navbar-brand">Bootstrap Blog</a>
+            <!-- Navbar Brand --><a href="index.php" class="navbar-brand">BlogProject</a>
             <!-- Toggle Button-->
             <button type="button" data-toggle="collapse" data-target="#navbarcollapse" aria-controls="navbarcollapse" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"><span></span><span></span><span></span></button>
           </div>
           <!-- Navbar Menu -->
           <div id="navbarcollapse" class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item"><a href="../index.php" class="nav-link ">Home</a>
-              </li>
-              <li class="nav-item"><a href="blog.html" class="nav-link active ">Blog</a>
-              </li>
-              <li class="nav-item"><a href="post.html" class="nav-link ">Post</a>
-              </li>
-              <li class="nav-item"><a href="login.html" class="nav-link ">Login</a>
-              </li>
+              <li class="nav-item"><a href="../index.php" class="nav-link active ">Home</a></li>
+              <li class="nav-item"><a href="blog.php" class="nav-link ">Blog</a></li>
+              <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li>
+              <li class="nav-item"><a href="newPost.php" class="nav-link ">New Post</a></li>
+              <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
+                <li class="nav-item"><a href="profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']?></a></li>
+                <li class="nav-item"><a href="logout.php" class="nav-link">Logout</a></li>
+              <?php elseif(!isset($_SESSION['loggedin']) && !isset($_SESSION['name'])): ?>
+                <li class="nav-item"><a href="login.php" class="nav-link ">Login</a></li>
+              <?php endif; ?>
             </ul>
-            <div class="navbar-text"><a href="#" class="search-btn"><i class="icon-search-1"></i></a></div>
-            <ul class="langs navbar-text"><a href="#" class="active">EN</a><span>           </span><a href="#">ES</a></ul>
+            <div class="navbar-text"><a href="php/#" class="search-btn"><i class="icon-search-1"></i></a></div>
+            <!-- <ul class="langs navbar-text"><a href="#" class="active">EN</a><span>           </span><a href="#">ES</a></ul> -->
           </div>
         </div>
       </nav>

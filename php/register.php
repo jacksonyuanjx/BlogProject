@@ -14,8 +14,10 @@
 
     // Check if data was submitted, isset() will check if data exists
     if (!isset($_POST['username'], $_POST['password'], $_POST['email'], $_POST['authKey'])) {
-        die ('Please complete the registration form!');
         // form is incomplete
+        $_SESSION['registration_err'] = "Please complete the registration form!";
+        header("Location: registerForm.php");
+        exit();
     }
 
     // Invalid characters validation

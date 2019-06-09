@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Bootstrap Blog - B4 Template by Bootstrap Temple</title>
+    <title>BlogProject</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="all,follow">
@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
     <!-- Font Awesome CSS-->
     <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
     <!-- Custom icon font-->
     <link rel="stylesheet" href="css/fontastic.css">
     <!-- Google fonts - Open Sans-->
@@ -52,26 +53,25 @@
         <div class="container">
           <!-- Navbar Brand -->
           <div class="navbar-header d-flex align-items-center justify-content-between">
-            <!-- Navbar Brand --><a href="index.php" class="navbar-brand">Bootstrap Blog</a>
+            <!-- Navbar Brand --><a href="index.php" class="navbar-brand">BlogProject</a>
             <!-- Toggle Button-->
             <button type="button" data-toggle="collapse" data-target="#navbarcollapse" aria-controls="navbarcollapse" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"><span></span><span></span><span></span></button>
           </div>
           <!-- Navbar Menu -->
           <div id="navbarcollapse" class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item"><a href="index.html" class="nav-link active ">Home</a>
-              </li>
-              <li class="nav-item"><a href="blog.html" class="nav-link ">Blog</a>
-              </li>
-              <li class="nav-item"><a href="post.html" class="nav-link ">Post</a>
-              </li>
+              <li class="nav-item"><a href="index.php" class="nav-link active ">Home</a></li>
+              <li class="nav-item"><a href="php/blog.php" class="nav-link ">Blog</a></li>
+              <li class="nav-item"><a href="php/post.php" class="nav-link ">Post</a></li>
+              <li class="nav-item"><a href="php/newPost.php" class="nav-link ">New Post</a></li>
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
+                <li class="nav-item"><a href="php/profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']?></a></li>
                 <li class="nav-item"><a href="php/logout.php" class="nav-link">Logout</a></li>
               <?php elseif(!isset($_SESSION['loggedin']) && !isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="php/login.php" class="nav-link ">Login</a></li>
               <?php endif; ?>
             </ul>
-            <div class="navbar-text"><a href="#" class="search-btn"><i class="icon-search-1"></i></a></div>
+            <div class="navbar-text"><a href="php/#" class="search-btn"><i class="icon-search-1"></i></a></div>
             <!-- <ul class="langs navbar-text"><a href="#" class="active">EN</a><span>           </span><a href="#">ES</a></ul> -->
           </div>
         </div>
@@ -84,7 +84,7 @@
           <div class="col-lg-7">
             <h1>Bootstrap 4 Blog - A free template by Bootstrap Temple</h1><a href="#" class="hero-link">Discover More</a>
           </div>
-        </div><a href=".intro" class="continue link-scroll"><i class="fa fa-long-arrow-down"></i> Scroll Down</a>
+        </div><a href=".intro" class="continue link-scroll"><i class="fas fa-arrow-down"></i> Scroll Down</a>
       </div>
     </section>
     <!-- Intro Section-->
