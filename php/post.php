@@ -1,9 +1,76 @@
+<?php 
+  session_start(); 
+  if (!isset($_SESSION['post_id'], $_SESSION['loggedin'])) {
+      header('Location: login.php');
+      exit();
+  }
+
+  // NOTE: might need to change condition for private posts
+  // This page works by using the current session variable 'post_id' to render the corresponding post.
+  // If the session has been destroyed or expired, this php script will force user the login and after
+  // logging in, the user will be redirected to the home page instead of this post page.
+
+  // There is a current post_id, so query the post's details from database
+  $DATABASE_HOST = 'localhost';
+	$DATABASE_USER = 'root';
+	$DATABASE_PASS = '';
+	$DATABASE_NAME = 'blog_db';
+
+	$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+	if ( mysqli_connect_errno() ) {
+		// If there is an error with the connection, stop the script and display the error.
+		die ('Failed to connect to MySQL: ' . mysqli_connect_error());
+  }
+  
+  // Guard that retrieves URL parameter (if it exists) and reassigns the current session var 'post_id' - represents the current post
+  // This guard accounts for users pressing the 'previous post' or 'next post' buttons
+  if ($_GET['post_id'] != NULL) {
+      $_SESSION['post_id'] = $_GET['post_id'];
+  }
+
+  if ($stmt_postDetails = $con->prepare('SELECT creator_id, date, title, post_body, private FROM posts WHERE post_id = ?')) {
+      // Binding parameter
+      $stmt_postDetails->bind_param('i', $_SESSION['post_id']);
+      $stmt_postDetails->execute();
+      // $stmt_postDetails->store_result();  // Storing result to assign to variables for displaying in html
+      
+      // Assigning query results into variables
+      $stmt_postDetails->bind_result($creator_id, $date, $title, $post_body, $private);   
+      $stmt_postDetails->fetch();
+  } else {
+      echo "stmt_postDetails failed";
+  }
+  $stmt_postDetails->close();
+
+  // Query selects the prev non-private post by post_id
+  if ($stmt_prevPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id < {$_SESSION['post_id']} AND private IS NULL ORDER BY post_id DESC LIMIT 1")) {
+      $stmt_prevPost->execute();
+      // $stmt_prevPost->store_result();    // unnecessary? don't need b/c only looking for one result/row not a bunch of them?
+      $stmt_prevPost->bind_result($prev_id, $prev_title);
+      $stmt_prevPost->fetch();
+  } else {
+      echo "stmt_prevPost failed";
+  }
+  $stmt_prevPost->close();
+
+  // Query selects the next non-private post by post_id
+  if ($stmt_nextPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id > {$_SESSION['post_id']} AND private IS NULL ORDER BY post_id ASC LIMIT 1")) {
+      $stmt_nextPost->execute();
+      $stmt_nextPost->bind_result($next_id, $next_title);
+      $stmt_nextPost->fetch();
+  }
+  $stmt_nextPost->close();
+
+  $con->close();
+?>
+
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Bootstrap Blog - B4 Template by Bootstrap Temple</title>
+    <title>BlogProject</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="all,follow">
@@ -11,6 +78,7 @@
     <link rel="stylesheet" href="../vendor/bootstrap/css/bootstrap.min.css">
     <!-- Font Awesome CSS-->
     <link rel="stylesheet" href="../vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
     <!-- Custom icon font-->
     <link rel="stylesheet" href="../css/fontastic.css">
     <!-- Google fonts - Open Sans-->
@@ -59,12 +127,13 @@
             <ul class="navbar-nav ml-auto">
               <li class="nav-item"><a href="../index.php" class="nav-link active ">Home</a></li>
               <li class="nav-item"><a href="blog.php" class="nav-link ">Blog</a></li>
-              <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li>
-              <li class="nav-item"><a href="newPost.php" class="nav-link ">New Post</a></li>
+              <!-- <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li> -->
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
+                <li class="nav-item"><a href="yourPosts.php" class="nav-link ">Your Posts</a></li>
+                <li class="nav-item"><a href="newPost.php" class="nav-link ">New Post</a></li>
                 <li class="nav-item"><a href="profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']?></a></li>
                 <li class="nav-item"><a href="logout.php" class="nav-link">Logout</a></li>
-              <?php elseif(!isset($_SESSION['loggedin']) && !isset($_SESSION['name'])): ?>
+              <?php elseif(!isset($_SESSION['loggedin']) || !isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="login.php" class="nav-link ">Login</a></li>
               <?php endif; ?>
             </ul>
@@ -82,21 +151,25 @@
             <div class="post-single">
               <div class="post-thumbnail"><img src="../img/blog-post-3.jpeg" alt="..." class="img-fluid"></div>
               <div class="post-details">
-                <div class="post-meta d-flex justify-content-between">
+                <!-- <div class="post-meta d-flex justify-content-between">
                   <div class="category"><a href="#">Business</a><a href="#">Financial</a></div>
-                </div>
-                <h1>Diversity in Engineering: The Effect on Questions<a href="#"><i class="fa fa-bookmark-o"></i></a></h1>
+                </div> -->
+                <h1>
+                  <?php echo $title; ?>
+                  <!-- <a href="#"><i class="fa fa-bookmark-o"></i></a> -->
+                </h1>
                 <div class="post-footer d-flex align-items-center flex-column flex-sm-row"><a href="#" class="author d-flex align-items-center flex-wrap">
                     <div class="avatar"><img src="../img/avatar-1.jpg" alt="..." class="img-fluid"></div>
-                    <div class="title"><span>John Doe</span></div></a>
+                    <div class="title"><span><?php echo $_SESSION['name']; ?></span></div></a>
                   <div class="d-flex align-items-center flex-wrap">       
-                    <div class="date"><i class="icon-clock"></i> 2 months ago</div>
+                    <div class="date"><i class="icon-clock"></i><?php echo $date; ?></div>
                     <div class="views"><i class="icon-eye"></i> 500</div>
                     <div class="comments meta-last"><i class="icon-comment"></i>12</div>
                   </div>
                 </div>
                 <div class="post-body">
-                  <p class="lead">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                  <?php echo $post_body; ?>
+                  <!-- <p class="lead">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
                   <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
                   <p> <img src="../img/featured-pic-3.jpeg" alt="..." class="img-fluid"></p>
                   <h3>Lorem Ipsum Dolor</h3>
@@ -107,18 +180,34 @@
                       <cite title="Source Title">Source Title</cite>
                     </footer>
                   </blockquote>
-                  <p>quasi nam. Libero dicta eum recusandae, commodi, ad, autem at ea iusto numquam veritatis, officiis. Accusantium optio minus, voluptatem? Quia reprehenderit, veniam quibusdam provident, fugit iusto ullam voluptas neque soluta adipisci ad.</p>
+                  <p>quasi nam. Libero dicta eum recusandae, commodi, ad, autem at ea iusto numquam veritatis, officiis. Accusantium optio minus, voluptatem? Quia reprehenderit, veniam quibusdam provident, fugit iusto ullam voluptas neque soluta adipisci ad.</p> -->
                 </div>
-                <div class="post-tags"><a href="#" class="tag">#Business</a><a href="#" class="tag">#Tricks</a><a href="#" class="tag">#Financial</a><a href="#" class="tag">#Economy</a></div>
-                <div class="posts-nav d-flex justify-content-between align-items-stretch flex-column flex-md-row"><a href="#" class="prev-post text-left d-flex align-items-center">
-                    <div class="icon prev"><i class="fa fa-angle-left"></i></div>
-                    <div class="text"><strong class="text-primary">Previous Post </strong>
-                      <h6>I Bought a Wedding Dress.</h6>
-                    </div></a><a href="#" class="next-post text-right d-flex align-items-center justify-content-end">
-                    <div class="text"><strong class="text-primary">Next Post </strong>
-                      <h6>I Bought a Wedding Dress.</h6>
-                    </div>
-                    <div class="icon next"><i class="fa fa-angle-right">   </i></div></a></div>
+                <!-- <div class="post-tags"><a href="#" class="tag">#Business</a><a href="#" class="tag">#Tricks</a><a href="#" class="tag">#Financial</a><a href="#" class="tag">#Economy</a></div> -->
+                <div class="posts-nav d-flex justify-content-between align-items-stretch flex-column flex-md-row">
+                    <!-- PREV POST -->
+                    <?php if ($prev_title != NULL): ?>
+                      <a href="post.php?post_id=<?php echo $prev_id ?>" class="prev-post text-left d-flex align-items-center">
+                      <div class="icon prev"><i class="fa fa-angle-left"></i></div>
+                      <div class="text"><strong class="text-primary">Previous Post </strong>
+                        <h6><?php echo $prev_title; ?></h6>
+                      </div></a>
+                    <?php else: ?>
+                      <!-- No more posts  -->
+                      <div class="text"></div>
+                    <?php endif; ?>
+
+                    <!-- NEXT POST -->
+                    <?php if ($next_title != NULL): ?>
+                      <a href="post.php?post_id=<?php echo $next_id ?>" class="next-post text-right d-flex align-items-center justify-content-end">
+                      <div class="text"><strong class="text-primary">Next Post </strong>
+                        <h6><?php echo $next_title; ?></h6>
+                      </div>
+                      <div class="icon next"><i class="fa fa-angle-right"></i></div></a>
+                    <?php else: ?>
+                      <!-- No more posts -->
+                      <div class="text"></div>
+                    <?php endif; ?>
+                </div>
                 <div class="post-comments">
                   <header>
                     <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3>

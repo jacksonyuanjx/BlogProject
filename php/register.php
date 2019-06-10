@@ -72,6 +72,7 @@
                 $stmt_newUser->bind_param('sss', $_POST['username'], $password, $_POST['email']);
                 $stmt_newUser->execute();
                 // Store current username in a session var
+                session_regenerate_id();   // use upon any transition in authentication state and ONLY at authentication transitions
                 $_SESSION['loggedin'] = TRUE;
                 $_SESSION['name'] = $_POST['username'];
                 $_SESSION['id'] = $id;

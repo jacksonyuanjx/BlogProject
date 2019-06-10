@@ -49,7 +49,7 @@ body, html {
 
 .modal-content {
     width: 75%;
-    height: 300px;
+    height: 350px;
     position:fixed; 
     top:50%; 
     left:50%; 

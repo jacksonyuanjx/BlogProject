@@ -62,7 +62,19 @@
                             </div>
                             </div>
                         </div> -->
-                        <button type="submit" class="btn btn-success">Submit</button>
+                        <div class="row">
+                            <div class="col-xs-1"></div>
+                            <button type="submit" class="btn btn-success col-xs-3">Submit</button>
+                            <!-- <div class="col-md-4"></div> -->
+                            <div class="checkbox col-xs-7">
+                                <label>
+                                    <input type="checkbox" name="private" value="1"/>Private Post
+                                </label>
+                            </div>
+                            <?php if (isset($_SESSION['incomplete_post_err'])): ?>
+                                <p style="color: blue; margin: 10px;"><br/><br/><?php echo $_SESSION['incomplete_post_err']?></p>
+                            <?php unset($_SESSION['incomplete_post_err']); endif; ?>
+                        </div>
                     </form>
 
                 </div>
