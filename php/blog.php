@@ -60,8 +60,8 @@
           <!-- Navbar Menu -->
           <div id="navbarcollapse" class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item"><a href="../index.php" class="nav-link active ">Home</a></li>
-              <li class="nav-item"><a href="blog.php" class="nav-link ">Blog</a></li>
+              <li class="nav-item"><a href="../index.php" class="nav-link ">Home</a></li>
+              <li class="nav-item"><a href="blog.php" class="nav-link active">Blog</a></li>
               <!-- <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li> -->
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="yourPosts.php" class="nav-link ">Your Posts</a></li>

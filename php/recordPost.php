@@ -1,4 +1,8 @@
 <?php
+    // recordPost.php will set session var 'post_id' so that when redirected to post.php, 
+    // we don't need the guard to check if the 'post_id' URL param is set as the queries will 
+    // always be using $_SESSION['post_id'] and not the URL param
+
     session_start();
     // If user not logged in, redirect to login page
     if (!isset($_SESSION['loggedin'])) {
@@ -25,15 +29,23 @@
         exit();
     }
 
-    if ($stmt = $con->prepare('INSERT INTO posts (creator_id, date, title, post_body, private) VALUES (?,?,?,?,?)')) {
+    if ($stmt = $con->prepare('INSERT INTO posts (creator_id, creator_name, date, title, post_body, private) VALUES (?,?,?,?,?,?)')) {
         date_default_timezone_set('Canada/Pacific');  // php Canada/Pacific timezone is closest to Vancouver time
-        $date = date('Y-m-d h:m:s', time());
-        $stmt->bind_param('isssi', $_SESSION['id'], $date, $_POST['title'], $_POST['post_body'], $_POST['private']);    // assigning creator_id as the id of the currently logged-in user, if $_POST['private'] == 1 then it's set
+        // Storing in 24-hr time
+        $date = date('Y-m-d H:i:s', time());
+        $private = 1;
+        if (!isset($_POST['private'])) {   // Must include this guard b/c bind_param won't take int and 'private' column on db is either 0 or 1
+            $private = 0;
+        }
+        $stmt->bind_param('issssi', $_SESSION['id'], $_SESSION['name'], $date, $_POST['title'], $_POST['post_body'], $private);    // assigning creator_id as the id of the currently logged-in user, if $_POST['private'] == 1 then it's set
         $stmt->execute();
-        $_SESSION['post_id'] = mysqli_insert_id($con);
+        $_SESSION['post_id'] = mysqli_insert_id($con);  // assigns to the most recent post_id
+        // echo $_SESSION['post_id'];
         header("Location: post.php");
         exit();
-    } else {
+    } 
+    else {
+        $_SESSION['error'] = "Failed to store post into db";
         echo 'Failed to store post into database';
     }
     $stmt->close();

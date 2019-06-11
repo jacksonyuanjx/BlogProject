@@ -24,40 +24,50 @@
   
   // Guard that retrieves URL parameter (if it exists) and reassigns the current session var 'post_id' - represents the current post
   // This guard accounts for users pressing the 'previous post' or 'next post' buttons
-  if ($_GET['post_id'] != NULL) {
+  if (isset($_GET['post_id'])) {
+    // if ($_GET['post_id'] != NULL) {
       $_SESSION['post_id'] = $_GET['post_id'];
+    // }
   }
 
-  if ($stmt_postDetails = $con->prepare('SELECT creator_id, date, title, post_body, private FROM posts WHERE post_id = ?')) {
+  if ($stmt_postDetails = $con->prepare('SELECT creator_id, creator_name, date, title, post_body, private FROM posts WHERE post_id = ?')) {
       // Binding parameter
       $stmt_postDetails->bind_param('i', $_SESSION['post_id']);
       $stmt_postDetails->execute();
       // $stmt_postDetails->store_result();  // Storing result to assign to variables for displaying in html
       
       // Assigning query results into variables
-      $stmt_postDetails->bind_result($creator_id, $date, $title, $post_body, $private);   
+      $stmt_postDetails->bind_result($creator_id, $creator_name, $date, $title, $post_body, $private);   
       $stmt_postDetails->fetch();
+      // echo date_create_from_format('Y-m-d H:i:s', $date);
+      // echo $date;
   } else {
       echo "stmt_postDetails failed";
   }
   $stmt_postDetails->close();
 
-  // Query selects the prev non-private post by post_id
-  if ($stmt_prevPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id < {$_SESSION['post_id']} AND private IS NULL ORDER BY post_id DESC LIMIT 1")) {
+  // Query selects the prev non-private post by post_id, ASSUMPTION: post_id increments accordingly with datetimes
+  // Comparing post_id in stmt condition b/c int comparisons are faster than string comparisons
+  $dateObj = strtotime($date);
+  if ($stmt_prevPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id < {$_SESSION['post_id']} AND (creator_id = {$_SESSION['id']} OR private = 0) ORDER BY post_id DESC LIMIT 1")) {
       $stmt_prevPost->execute();
       // $stmt_prevPost->store_result();    // unnecessary? don't need b/c only looking for one result/row not a bunch of them?
       $stmt_prevPost->bind_result($prev_id, $prev_title);
       $stmt_prevPost->fetch();
   } else {
+    $_SESSION['failed to prepare prevPost'];
       echo "stmt_prevPost failed";
   }
   $stmt_prevPost->close();
 
-  // Query selects the next non-private post by post_id
-  if ($stmt_nextPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id > {$_SESSION['post_id']} AND private IS NULL ORDER BY post_id ASC LIMIT 1")) {
+  // Query selects the next non-private post by date
+  if ($stmt_nextPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id > {$_SESSION['post_id']} AND (creator_id = {$_SESSION['id']} OR private = 0) ORDER BY post_id ASC LIMIT 1")) {
       $stmt_nextPost->execute();
       $stmt_nextPost->bind_result($next_id, $next_title);
       $stmt_nextPost->fetch();
+  } else {
+    $_SESSION['failed to prepare nextPost'];
+    echo "stmt_nextPost failed";
   }
   $stmt_nextPost->close();
 
@@ -70,7 +80,11 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <?php if (isset($_SESSION['error'])): ?>
+      <title><?php echo $_SESSION['error']; ?></title>
+<?php else: ?>
     <title>BlogProject</title>
+<?php endif; ?>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="all,follow">
@@ -160,9 +174,9 @@
                 </h1>
                 <div class="post-footer d-flex align-items-center flex-column flex-sm-row"><a href="#" class="author d-flex align-items-center flex-wrap">
                     <div class="avatar"><img src="../img/avatar-1.jpg" alt="..." class="img-fluid"></div>
-                    <div class="title"><span><?php echo $_SESSION['name']; ?></span></div></a>
+                    <div class="title"><span><?php echo $creator_name; ?></span></div></a>
                   <div class="d-flex align-items-center flex-wrap">       
-                    <div class="date"><i class="icon-clock"></i><?php echo $date; ?></div>
+                    <div class="date"><i class="icon-clock"></i><?php echo date_format(date_create($date), "h:i A | d-M Y"); ?></div>
                     <div class="views"><i class="icon-eye"></i> 500</div>
                     <div class="comments meta-last"><i class="icon-comment"></i>12</div>
                   </div>

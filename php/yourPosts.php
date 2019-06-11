@@ -1,4 +1,63 @@
-<?php session_start(); ?>
+<?php 
+    session_start(); 
+    if (!isset($_SESSION['loggedin'])) {
+        header('Location: login.php');
+        exit();
+    }
+
+    $DATABASE_HOST = 'localhost';
+    $DATABASE_USER = 'root';
+    $DATABASE_PASS = '';
+    $DATABASE_NAME = 'blog_db';
+
+	  $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+	  if ( mysqli_connect_errno() ) {
+		// If there is an error with the connection, stop the script and display the error.
+		die ('Failed to connect to MySQL: ' . mysqli_connect_error());
+    }
+
+    // If page number is not set, then set it to the first page
+    if (!isset($_GET['page'])) {
+        $_GET['page'] = 1;
+    }
+
+    // Query that retrieves the total number of posts
+    if ($stmt_numPosts = $con->prepare('SELECT COUNT(*) AS total FROM posts WHERE creator_id = ?')) {
+        $stmt_numPosts->bind_param('s', $_SESSION['id']);
+        $stmt_numPosts->execute();
+        $res = $stmt_numPosts->get_result();
+        $row = $res->fetch_object();
+
+        // Assigning variables for pagination
+        $totalNumPosts = $row->total;
+        $totalNumPages = ceil($totalNumPosts / 4);  // Displaying 4 posts per page
+    }
+    $stmt_numPosts->close();
+
+    // Query that retrieves the 4 most recent posts by currently logged-in user in order from most recent --> least recent, depending on current page
+    $limit_offset = ($_GET['page'] - 1) * 4;
+    $limit_count = ($totalNumPosts - $limit_offset) < 4 ? $totalNumPosts - $limit_offset : 4;
+    if ($stmt_recentPosts = $con->prepare('SELECT post_id, date, title, post_body, private FROM posts WHERE creator_id = ? ORDER BY date DESC LIMIT ' . $limit_offset . ',' . $limit_count)) {
+        $stmt_recentPosts->bind_param('s', $_SESSION['id']);
+        $stmt_recentPosts->execute();
+        $result = $stmt_recentPosts->get_result();
+        if ($result->num_rows > 0) {
+            while ($row = mysqli_fetch_array($result)) {
+                $results[] = $row;
+                // echo $row['post_id'] . "<br/>;
+            }
+            // echo $results[0]['post_id'];
+        }
+  
+      // $stmt_recentPosts->bind_result($post_id, $date, $title, $post_body, $private);
+      // $stmt_recentPosts->fetch();
+    } else {
+        echo "failed query";
+    }
+    // echo $results[0]['post_id'];
+    
+    // instead of displaying num of comments, display a lock or unlock? indicating private or public
+?>
 
 <!DOCTYPE html>
 <html>
@@ -60,11 +119,11 @@
           <!-- Navbar Menu -->
           <div id="navbarcollapse" class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item"><a href="../index.php" class="nav-link active ">Home</a></li>
+              <li class="nav-item"><a href="../index.php" class="nav-link ">Home</a></li>
               <li class="nav-item"><a href="blog.php" class="nav-link ">Blog</a></li>
               <!-- <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li> -->
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
-                <li class="nav-item"><a href="yourPosts.php" class="nav-link ">Your Posts</a></li>
+                <li class="nav-item"><a href="yourPosts.php" class="nav-link active">Your Posts</a></li>
                 <li class="nav-item"><a href="newPost.php" class="nav-link">New Post</a></li>
                 <li class="nav-item"><a href="profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']?></a></li>
                 <li class="nav-item"><a href="logout.php" class="nav-link">Logout</a></li>
@@ -85,25 +144,41 @@
           <div class="container">
             <div class="row">
               <!-- post -->
-              <div class="post col-xl-6">
-                <div class="post-thumbnail"><a href="post.html"><img src="../img/blog-post-1.jpeg" alt="..." class="img-fluid"></a></div>
-                <div class="post-details">
-                  <div class="post-meta d-flex justify-content-between">
-                    <div class="date meta-last">20 May | 2016</div>
-                    <div class="category"><a href="#">Business</a></div>
-                  </div><a href="post.html">
-                    <h3 class="h4">Alberto Savoia Can Teach You About Interior</h3></a>
-                  <p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.</p>
-                  <footer class="post-footer d-flex align-items-center"><a href="#" class="author d-flex align-items-center flex-wrap">
-                      <div class="avatar"><img src="img/avatar-3.jpg" alt="..." class="img-fluid"></div>
-                      <div class="title"><span>John Doe</span></div></a>
-                    <div class="date"><i class="icon-clock"></i> 2 months ago</div>
-                    <div class="comments meta-last"><i class="icon-comment"></i>12</div>
-                  </footer>
-                </div>
-              </div>
+              <?php if (isset($results)) {
+                for ($i = 0; $i < $limit_count; $i++) { ?>
+                  <div class="post col-xl-6">
+                    <div class="post-thumbnail"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>"><img src="../img/blog-post-1.jpeg" alt="..." class="img-fluid"></a></div>
+                    <div class="post-details">
+                      <div class="post-meta d-flex justify-content-between">
+                        <div class="date meta-last"><?php echo date_format(date_create($results[$i]['date']), "d-M | Y"); ?></div>
+                        <!-- <div class="category"><a href="#">Business</a></div> -->
+                        <!-- UPDATE THIS LINK BELOW -->
+                      </div><a href="post.php">
+                        <h3 class="h4"><?php echo $results[$i]['title']; ?></h3></a>
+                      <!-- Displaying the first 100 characters of post, essentially a summary -->
+                      <p class="text-muted"><?php echo substr($results[$i]['post_body'], 0, 100) . "..."; ?></p>  
+                      <footer class="post-footer d-flex align-items-center"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>" class="author d-flex align-items-center flex-wrap">
+                          <div class="avatar"><img src="img/avatar-3.jpg" alt="..." class="img-fluid"></div>
+                          <div class="title"><span><?php echo $_SESSION['name']; ?></span></div></a>
+                        <div class="title">
+                          <?php if ($results[$i]['private'] == 1) {
+                            ?><i class="fas fa-lock"></i> Private<?php 
+                          } else {
+                            ?><i class="fas fa-unlock"></i> Public<?php
+                          } ?>
+                        </div>
+                        <div class="comments meta-last"><i class="icon-comment"></i>12</div>
+                      </footer>
+                    </div>
+                  </div>
+                <?php
+                }
+              } else {
+                // Case where there are 0 posts
+                ?><h3 class="h3 text-center">You have no posts so far!</h3><?php
+              } ?>
               <!-- post             -->
-              <div class="post col-xl-6">
+              <!-- <div class="post col-xl-6">
                 <div class="post-thumbnail"><a href="post.html"><img src="../img/blog-post-2.jpg" alt="..." class="img-fluid"></a></div>
                 <div class="post-details">
                   <div class="post-meta d-flex justify-content-between">
@@ -119,52 +194,33 @@
                     <div class="comments meta-last"><i class="icon-comment"></i>12</div>
                   </div>
                 </div>
-              </div>
-              <!-- post             -->
-              <div class="post col-xl-6">
-                <div class="post-thumbnail"><a href="post.html"><img src="../img/blog-post-3.jpeg" alt="..." class="img-fluid"></a></div>
-                <div class="post-details">
-                  <div class="post-meta d-flex justify-content-between">
-                    <div class="date meta-last">20 May | 2016</div>
-                    <div class="category"><a href="#">Business</a></div>
-                  </div><a href="post.html">
-                    <h3 class="h4">Alberto Savoia Can Teach You About Interior</h3></a>
-                  <p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.</p>
-                  <div class="post-footer d-flex align-items-center"><a href="#" class="author d-flex align-items-center flex-wrap">
-                      <div class="avatar"><img src="../img/avatar-3.jpg" alt="..." class="img-fluid"></div>
-                      <div class="title"><span>John Doe</span></div></a>
-                    <div class="date"><i class="icon-clock"></i> 2 months ago</div>
-                    <div class="comments meta-last"><i class="icon-comment"></i>12</div>
-                  </div>
-                </div>
-              </div>
-              <!-- post -->
-              <div class="post col-xl-6">
-                <div class="post-thumbnail"><a href="post.html"><img src="img/blog-post-4.jpeg" alt="..." class="img-fluid"></a></div>
-                <div class="post-details">
-                  <div class="post-meta d-flex justify-content-between">
-                    <div class="date meta-last">20 May | 2016</div>
-                    <div class="category"><a href="#">Business</a></div>
-                  </div><a href="post.html">
-                    <h3 class="h4">Alberto Savoia Can Teach You About Interior</h3></a>
-                  <p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.</p>
-                  <div class="post-footer d-flex align-items-center"><a href="#" class="author d-flex align-items-center flex-wrap">
-                      <div class="avatar"><img src="img/avatar-1.jpg" alt="..." class="img-fluid"></div>
-                      <div class="title"><span>John Doe</span></div></a>
-                    <div class="date"><i class="icon-clock"></i> 2 months ago</div>
-                    <div class="comments meta-last"><i class="icon-comment"></i>12</div>
-                  </div>
-                </div>
-              </div>
+              </div> -->
             </div>
             <!-- Pagination -->
             <nav aria-label="Page navigation example">
               <ul class="pagination pagination-template d-flex justify-content-center">
-                <li class="page-item"><a href="#" class="page-link"> <i class="fa fa-angle-left"></i></a></li>
-                <li class="page-item"><a href="#" class="page-link active">1</a></li>
-                <li class="page-item"><a href="#" class="page-link">2</a></li>
-                <li class="page-item"><a href="#" class="page-link">3</a></li>
-                <li class="page-item"><a href="#" class="page-link"> <i class="fa fa-angle-right"></i></a></li>
+                <!-- php script below handles pagination displays, etc -->
+                <?php if ($limit_offset != 0) {
+                  // Guaranteed at this point that there is a previous page so can do $_GET['page'] -1
+                  ?><li class="page-item"><a href="yourPosts.php?page=<?php echo $_GET['page']-1; ?>" class="page-link"> <i class="fa fa-angle-left"></i></a></li><?php
+                } ?>
+                <?php if ($totalNumPages != 0) {
+                  for ($i = 1; $i <= $totalNumPages; $i++) {
+                    if ($i == 1 || $i == $totalNumPages || ($i >= $_GET['page'] - 2 && $i <= $_GET['page'] + 2)) {
+                      if ($i == $_GET['page']) {
+                        ?><li class="page-item"><a href="yourPosts.php?page=<?php echo $i; ?>" class="page-link active"><?php echo $i ?></a></li><?php
+                      } else {
+                        ?><li class="page-item"><a href="yourPosts.php?page=<?php echo $i; ?>" class="page-link"><?php echo $i ?></a></li><?php
+                      } 
+                    }
+                  }
+                } else {
+                  // Case where there are 0 posts
+                  ?><li class="page-item"><a href="yourPosts.php?page=<?php echo $i; ?>" class="page-link active">1</a></li><?php
+                } ?>
+                <?php if ($_GET['page'] != $totalNumPages) {
+                  ?><li class="page-item"><a href="yourPosts.php?page=<?php echo $_GET['page']+1; ?>" class="page-link"> <i class="fa fa-angle-right"></i></a></li><?php
+                } ?>
               </ul>
             </nav>
           </div>

@@ -60,11 +60,11 @@
           <!-- Navbar Menu -->
           <div id="navbarcollapse" class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item"><a href="index.php" class="nav-link active ">Home</a></li>
+              <li class="nav-item"><a href="index.php" class="nav-link active">Home</a></li>
               <li class="nav-item"><a href="php/blog.php" class="nav-link ">Blog</a></li>
               <!-- <li class="nav-item"><a href="php/post.php" class="nav-link ">Post</a></li> -->
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
-                <li class="nav-item"><a href="php/yourPosts.php" class="nav-link ">Your Posts</a></li>
+                <li class="nav-item"><a href="php/yourPosts.php" class="nav-link">Your Posts</a></li>
                 <li class="nav-item"><a href="php/newPost.php" class="nav-link ">New Post</a></li>
                 <li class="nav-item"><a href="php/profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']; ?></a></li>
                 <li class="nav-item"><a href="php/logout.php" class="nav-link">Logout</a></li>
