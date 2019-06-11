@@ -1,6 +1,11 @@
 <?php 
   session_start(); 
-  if (!isset($_SESSION['post_id'], $_SESSION['loggedin'])) {
+  
+  if (isset($_GET['publicPost'])) {
+      // Case where navigated to this page from the public blog.php page
+      $_SESSION['post_id'] = $_GET['post_id'];
+      unset($_GET['publicPost']);
+  } elseif (!isset($_SESSION['post_id'], $_SESSION['loggedin'])) {
       header('Location: login.php');
       exit();
   }
@@ -46,30 +51,79 @@
   }
   $stmt_postDetails->close();
 
-  // Query selects the prev non-private post by post_id, ASSUMPTION: post_id increments accordingly with datetimes
-  // Comparing post_id in stmt condition b/c int comparisons are faster than string comparisons
   $dateObj = strtotime($date);
-  if ($stmt_prevPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id < {$_SESSION['post_id']} AND (creator_id = {$_SESSION['id']} OR private = 0) ORDER BY post_id DESC LIMIT 1")) {
-      $stmt_prevPost->execute();
-      // $stmt_prevPost->store_result();    // unnecessary? don't need b/c only looking for one result/row not a bunch of them?
-      $stmt_prevPost->bind_result($prev_id, $prev_title);
-      $stmt_prevPost->fetch();
-  } else {
-    $_SESSION['failed to prepare prevPost'];
-      echo "stmt_prevPost failed";
-  }
-  $stmt_prevPost->close();
+  if (isset($_SESSION['id'], $_SESSION['loggedin'])) {
+      // Query selects the prev non-private post by post_id, ASSUMPTION: post_id increments accordingly with datetimes
+      // Comparing post_id in stmt condition b/c int comparisons are faster than string comparisons
+      if ($stmt_prevPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id < {$_SESSION['post_id']} AND (creator_id = {$_SESSION['id']} OR private = 0) ORDER BY post_id DESC LIMIT 1")) {
+          // $stmt_prevPost->execute();
+          // // $stmt_prevPost->store_result();    // unnecessary? don't need b/c only looking for one result/row not a bunch of them?
+          // $stmt_prevPost->bind_result($prev_id, $prev_title);
+          // $stmt_prevPost->fetch();
+      } else {
+          $_SESSION['failed to prepare prevPost'];
+          echo "stmt_prevPost failed";
+      }
+      // $stmt_prevPost->close();
 
-  // Query selects the next non-private post by date
-  if ($stmt_nextPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id > {$_SESSION['post_id']} AND (creator_id = {$_SESSION['id']} OR private = 0) ORDER BY post_id ASC LIMIT 1")) {
-      $stmt_nextPost->execute();
-      $stmt_nextPost->bind_result($next_id, $next_title);
-      $stmt_nextPost->fetch();
+      // Query selects the next non-private post by post_id
+      if ($stmt_nextPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id > {$_SESSION['post_id']} AND (creator_id = {$_SESSION['id']} OR private = 0) ORDER BY post_id ASC LIMIT 1")) {
+          // $stmt_nextPost->execute();
+          // $stmt_nextPost->bind_result($next_id, $next_title);
+          // $stmt_nextPost->fetch();
+      } else {
+          $_SESSION['failed to prepare nextPost'];
+          echo "stmt_nextPost failed";
+      }
+      // $stmt_nextPost->close();
+
+      // Query that retrieves the 3 most recent posts to display max 3 in the 'Latest Posts' section
+      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private FROM posts WHERE creator_id = {$_SESSION['id']} OR private = 0 ORDER BY date DESC LIMIT 0,3")) {
+      } else {
+          echo "failed query1";
+      }
   } else {
-    $_SESSION['failed to prepare nextPost'];
-    echo "stmt_nextPost failed";
+      // Query selects the prev non-private post by post_id
+      if ($stmt_prevPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id < {$_SESSION['post_id']} AND private = 0 ORDER BY post_id DESC LIMIT 1")) {
+      } else {
+          $_SESSION['failed to prepare prevPost'];
+          echo "stmt_prevPost failed";
+      }
+
+      // Query selects the next non-private post by date
+      if ($stmt_nextPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id > {$_SESSION['post_id']} AND private = 0 ORDER BY post_id ASC LIMIT 1")) {
+      } else {
+          $_SESSION['failed to prepare nextPost'];
+          echo "stmt_nextPost failed";
+      }
+
+      // Query that retrieves the 3 most recent PUBLIC posts to display max 3 in the 'Latest Posts' section
+      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3")) {
+      } else {
+          echo "failed query1";
+      }
   }
+
+  // Executing the set of post-related stmts
+  $stmt_prevPost->execute();
+  // $stmt_prevPost->store_result();    // unnecessary? don't need b/c only looking for one result/row not a bunch of them?
+  $stmt_prevPost->bind_result($prev_id, $prev_title);
+  $stmt_prevPost->fetch();
+  $stmt_prevPost->close();    // Make sure to close this stmt before executing the next
+
+  $stmt_nextPost->execute();
+  $stmt_nextPost->bind_result($next_id, $next_title);
+  $stmt_nextPost->fetch();
   $stmt_nextPost->close();
+
+  $stmt_latest->execute();
+  $result_latest = $stmt_latest->get_result();
+  if ($result_latest->num_rows > 0) {
+      while ($row = mysqli_fetch_array($result_latest)) {
+          $results_latest[] = $row;
+      }
+  }
+  $stmt_latest->close();
 
   $con->close();
 ?>
@@ -139,7 +193,7 @@
           <!-- Navbar Menu -->
           <div id="navbarcollapse" class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item"><a href="../index.php" class="nav-link active ">Home</a></li>
+              <li class="nav-item"><a href="../index.php" class="nav-link ">Home</a></li>
               <li class="nav-item"><a href="blog.php" class="nav-link ">Blog</a></li>
               <!-- <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li> -->
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
@@ -159,7 +213,7 @@
     </header>
     <div class="container">
       <div class="row">
-        <!-- Latest Posts -->
+        <!-- Current Post -->
         <main class="post blog-post col-lg-8"> 
           <div class="container">
             <div class="post-single">
@@ -178,7 +232,14 @@
                   <div class="d-flex align-items-center flex-wrap">       
                     <div class="date"><i class="icon-clock"></i><?php echo date_format(date_create($date), "h:i A | d-M Y"); ?></div>
                     <div class="views"><i class="icon-eye"></i> 500</div>
-                    <div class="comments meta-last"><i class="icon-comment"></i>12</div>
+                    <div class="comments "><i class="icon-comment"></i>12</div>
+                    <div class="title meta-last">
+                      <?php if ($private == 1) {
+                        ?><i class="fas fa-lock"></i> Private<?php 
+                      } else {
+                        ?><i class="fas fa-unlock"></i> Public<?php
+                      } ?>
+                    </div>
                   </div>
                 </div>
                 <div class="post-body">
@@ -200,7 +261,7 @@
                 <div class="posts-nav d-flex justify-content-between align-items-stretch flex-column flex-md-row">
                     <!-- PREV POST -->
                     <?php if ($prev_title != NULL): ?>
-                      <a href="post.php?post_id=<?php echo $prev_id ?>" class="prev-post text-left d-flex align-items-center">
+                      <a href="post.php?post_id=<?php echo $prev_id ?>&publicPost=1" class="prev-post text-left d-flex align-items-center">
                       <div class="icon prev"><i class="fa fa-angle-left"></i></div>
                       <div class="text"><strong class="text-primary">Previous Post </strong>
                         <h6><?php echo $prev_title; ?></h6>
@@ -212,7 +273,7 @@
 
                     <!-- NEXT POST -->
                     <?php if ($next_title != NULL): ?>
-                      <a href="post.php?post_id=<?php echo $next_id ?>" class="next-post text-right d-flex align-items-center justify-content-end">
+                      <a href="post.php?post_id=<?php echo $next_id ?>&publicPost=1" class="next-post text-right d-flex align-items-center justify-content-end">
                       <div class="text"><strong class="text-primary">Next Post </strong>
                         <h6><?php echo $next_title; ?></h6>
                       </div>
@@ -303,58 +364,24 @@
             <header>
               <h3 class="h6">Latest Posts</h3>
             </header>
-            <div class="blog-posts"><a href="#">
-                <div class="item d-flex align-items-center">
-                  <div class="image"><img src="../img/small-thumbnail-1.jpg" alt="..." class="img-fluid"></div>
-                  <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
-                    <div class="d-flex align-items-center">
-                      <div class="views"><i class="icon-eye"></i> 500</div>
-                      <div class="comments"><i class="icon-comment"></i>12</div>
+            <div class="blog-posts">
+              <?php if (isset($results_latest)) {
+                for ($i = 0; $i < sizeof($results_latest); $i++) { ?>
+                  <a href="post.php?post_id=<?php echo $results_latest[$i]['post_id']; if ($results_latest[$i]['private'] == 0): ?>&publicPost=1<?php endif; ?>">
+                    <div class="item d-flex align-items-center">
+                      <div class="image"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></div>
+                      <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
+                        <div class="d-flex align-items-center">
+                          <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
+                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M | Y"); ?></div>
+                          <div class="comments"><i class="icon-comment"></i>12</div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div></a><a href="#">
-                <div class="item d-flex align-items-center">
-                  <div class="image"><img src="../img/small-thumbnail-2.jpg" alt="..." class="img-fluid"></div>
-                  <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
-                    <div class="d-flex align-items-center">
-                      <div class="views"><i class="icon-eye"></i> 500</div>
-                      <div class="comments"><i class="icon-comment"></i>12</div>
-                    </div>
-                  </div>
-                </div></a><a href="#">
-                <div class="item d-flex align-items-center">
-                  <div class="image"><img src="../img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
-                  <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
-                    <div class="d-flex align-items-center">
-                      <div class="views"><i class="icon-eye"></i> 500</div>
-                      <div class="comments"><i class="icon-comment"></i>12</div>
-                    </div>
-                  </div>
-                </div></a></div>
-          </div>
-          <!-- Widget [Categories Widget]-->
-          <div class="widget categories">
-            <header>
-              <h3 class="h6">Categories</h3>
-            </header>
-            <div class="item d-flex justify-content-between"><a href="#">Growth</a><span>12</span></div>
-            <div class="item d-flex justify-content-between"><a href="#">Local</a><span>25</span></div>
-            <div class="item d-flex justify-content-between"><a href="#">Sales</a><span>8</span></div>
-            <div class="item d-flex justify-content-between"><a href="#">Tips</a><span>17</span></div>
-            <div class="item d-flex justify-content-between"><a href="#">Local</a><span>25</span></div>
-          </div>
-          <!-- Widget [Tags Cloud Widget]-->
-          <div class="widget tags">       
-            <header>
-              <h3 class="h6">Tags</h3>
-            </header>
-            <ul class="list-inline">
-              <li class="list-inline-item"><a href="#" class="tag">#Business</a></li>
-              <li class="list-inline-item"><a href="#" class="tag">#Technology</a></li>
-              <li class="list-inline-item"><a href="#" class="tag">#Fashion</a></li>
-              <li class="list-inline-item"><a href="#" class="tag">#Sports</a></li>
-              <li class="list-inline-item"><a href="#" class="tag">#Economy</a></li>
-            </ul>
+                  </a><?php
+                }
+              } ?>
+            </div>
           </div>
         </aside>
       </div>

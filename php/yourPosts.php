@@ -37,7 +37,7 @@
     // Query that retrieves the 4 most recent posts by currently logged-in user in order from most recent --> least recent, depending on current page
     $limit_offset = ($_GET['page'] - 1) * 4;
     $limit_count = ($totalNumPosts - $limit_offset) < 4 ? $totalNumPosts - $limit_offset : 4;
-    if ($stmt_recentPosts = $con->prepare('SELECT post_id, date, title, post_body, private FROM posts WHERE creator_id = ? ORDER BY date DESC LIMIT ' . $limit_offset . ',' . $limit_count)) {
+    if ($stmt_recentPosts = $con->prepare('SELECT post_id, creator_name, date, title, post_body, private FROM posts WHERE creator_id = ? ORDER BY date DESC LIMIT ' . $limit_offset . ',' . $limit_count)) {
         $stmt_recentPosts->bind_param('s', $_SESSION['id']);
         $stmt_recentPosts->execute();
         $result = $stmt_recentPosts->get_result();
@@ -54,7 +54,23 @@
     } else {
         echo "failed query";
     }
-    // echo $results[0]['post_id'];
+    $stmt_recentPosts->close();
+    
+    // Query that retrieves the 3 most recent posts to display max 3 in the 'Latest Posts' section
+    if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private FROM posts WHERE creator_id = {$_SESSION['id']} OR private = 0 ORDER BY date DESC LIMIT 0,3")) {
+        $stmt_latest->execute();
+        $result_latest = $stmt_latest->get_result();
+        if ($result_latest->num_rows > 0) {
+            while ($row = mysqli_fetch_array($result_latest)) {
+                $results_latest[] = $row;
+            }
+        }
+    } else {
+        echo "failed query1";
+    }
+    $stmt_latest->close();
+
+    $con->close();
     
     // instead of displaying num of comments, display a lock or unlock? indicating private or public
 ?>
@@ -139,7 +155,7 @@
     </header>
     <div class="container">
       <div class="row">
-        <!-- Latest Posts -->
+        <!-- Posts (4 per page) -->
         <main class="posts-listing col-lg-8"> 
           <div class="container">
             <div class="row">
@@ -147,19 +163,19 @@
               <?php if (isset($results)) {
                 for ($i = 0; $i < $limit_count; $i++) { ?>
                   <div class="post col-xl-6">
-                    <div class="post-thumbnail"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>"><img src="../img/blog-post-1.jpeg" alt="..." class="img-fluid"></a></div>
+                    <div class="post-thumbnail"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></a></div>
                     <div class="post-details">
                       <div class="post-meta d-flex justify-content-between">
                         <div class="date meta-last"><?php echo date_format(date_create($results[$i]['date']), "d-M | Y"); ?></div>
                         <!-- <div class="category"><a href="#">Business</a></div> -->
                         <!-- UPDATE THIS LINK BELOW -->
-                      </div><a href="post.php">
+                      </div><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>">
                         <h3 class="h4"><?php echo $results[$i]['title']; ?></h3></a>
                       <!-- Displaying the first 100 characters of post, essentially a summary -->
                       <p class="text-muted"><?php echo substr($results[$i]['post_body'], 0, 100) . "..."; ?></p>  
                       <footer class="post-footer d-flex align-items-center"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>" class="author d-flex align-items-center flex-wrap">
-                          <div class="avatar"><img src="img/avatar-3.jpg" alt="..." class="img-fluid"></div>
-                          <div class="title"><span><?php echo $_SESSION['name']; ?></span></div></a>
+                          <div class="avatar"><img src="../img/avatar-3.jpg" alt="..." class="img-fluid"></div>
+                          <div class="title"><span><?php echo $results[$i]['creator_name']; ?></span></div></a>
                         <div class="title">
                           <?php if ($results[$i]['private'] == 1) {
                             ?><i class="fas fa-lock"></i> Private<?php 
@@ -243,37 +259,49 @@
             <header>
               <h3 class="h6">Latest Posts</h3>
             </header>
-            <div class="blog-posts"><a href="#">
-                <div class="item d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-1.jpg" alt="..." class="img-fluid"></div>
-                  <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
-                    <div class="d-flex align-items-center">
-                      <div class="views"><i class="icon-eye"></i> 500</div>
-                      <div class="comments"><i class="icon-comment"></i>12</div>
+            <div class="blog-posts">
+              <?php if (isset($results_latest)) {
+                for ($i = 0; $i < sizeof($results_latest); $i++) { ?>
+                  <a href="post.php?post_id=<?php echo $results_latest[$i]['post_id']; if ($results_latest[$i]['private'] == 0): ?>&publicPost=1<?php endif; ?>">
+                    <div class="item d-flex align-items-center">
+                      <div class="image"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></div>
+                      <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
+                        <div class="d-flex align-items-center">
+                          <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
+                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M | Y"); ?></div>
+                          <div class="comments"><i class="icon-comment"></i>12</div>
+                        </div>
+                      </div>
+                    </div>
+                  </a><?php
+                }
+              } ?>
+                <!-- <a href="#">
+                  <div class="item d-flex align-items-center">
+                    <div class="image"><img src="img/small-thumbnail-2.jpg" alt="..." class="img-fluid"></div>
+                    <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
+                      <div class="d-flex align-items-center">
+                        <div class="views"><i class="icon-eye"></i> 500</div>
+                        <div class="comments"><i class="icon-comment"></i>12</div>
+                      </div>
                     </div>
                   </div>
-                </div></a><a href="#">
-                <div class="item d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-2.jpg" alt="..." class="img-fluid"></div>
-                  <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
-                    <div class="d-flex align-items-center">
-                      <div class="views"><i class="icon-eye"></i> 500</div>
-                      <div class="comments"><i class="icon-comment"></i>12</div>
+                </a>
+                <a href="#">
+                  <div class="item d-flex align-items-center">
+                    <div class="image"><img src="img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
+                    <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
+                      <div class="d-flex align-items-center">
+                        <div class="views"><i class="icon-eye"></i> 500</div>
+                        <div class="comments"><i class="icon-comment"></i>12</div>
+                      </div>
                     </div>
                   </div>
-                </div></a><a href="#">
-                <div class="item d-flex align-items-center">
-                  <div class="image"><img src="img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
-                  <div class="title"><strong>Alberto Savoia Can Teach You About</strong>
-                    <div class="d-flex align-items-center">
-                      <div class="views"><i class="icon-eye"></i> 500</div>
-                      <div class="comments"><i class="icon-comment"></i>12</div>
-                    </div>
-                  </div>
-                </div></a></div>
+                </a> -->
+            </div>
           </div>
           <!-- Widget [Categories Widget]-->
-          <div class="widget categories">
+          <!-- <div class="widget categories">
             <header>
               <h3 class="h6">Categories</h3>
             </header>
@@ -282,9 +310,9 @@
             <div class="item d-flex justify-content-between"><a href="#">Sales</a><span>8</span></div>
             <div class="item d-flex justify-content-between"><a href="#">Tips</a><span>17</span></div>
             <div class="item d-flex justify-content-between"><a href="#">Local</a><span>25</span></div>
-          </div>
+          </div> -->
           <!-- Widget [Tags Cloud Widget]-->
-          <div class="widget tags">       
+          <!-- <div class="widget tags">       
             <header>
               <h3 class="h6">Tags</h3>
             </header>
@@ -295,7 +323,7 @@
               <li class="list-inline-item"><a href="#" class="tag">#Sports</a></li>
               <li class="list-inline-item"><a href="#" class="tag">#Economy</a></li>
             </ul>
-          </div>
+          </div> -->
         </aside>
       </div>
     </div>
