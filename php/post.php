@@ -44,12 +44,12 @@
       // Assigning query results into variables
       $stmt_postDetails->bind_result($creator_id, $creator_name, $date, $title, $post_body, $private);   
       $stmt_postDetails->fetch();
+      $stmt_postDetails->close();
       // echo date_create_from_format('Y-m-d H:i:s', $date);
       // echo $date;
   } else {
       echo "stmt_postDetails failed";
   }
-  $stmt_postDetails->close();
 
   $dateObj = strtotime($date);
   if (isset($_SESSION['id'], $_SESSION['loggedin'])) {
@@ -105,25 +105,45 @@
   }
 
   // Executing the set of post-related stmts
-  $stmt_prevPost->execute();
-  // $stmt_prevPost->store_result();    // unnecessary? don't need b/c only looking for one result/row not a bunch of them?
-  $stmt_prevPost->bind_result($prev_id, $prev_title);
-  $stmt_prevPost->fetch();
-  $stmt_prevPost->close();    // Make sure to close this stmt before executing the next
-
-  $stmt_nextPost->execute();
-  $stmt_nextPost->bind_result($next_id, $next_title);
-  $stmt_nextPost->fetch();
-  $stmt_nextPost->close();
-
-  $stmt_latest->execute();
-  $result_latest = $stmt_latest->get_result();
-  if ($result_latest->num_rows > 0) {
-      while ($row = mysqli_fetch_array($result_latest)) {
-          $results_latest[] = $row;
-      }
+  if ($stmt_prevPost != false || $stmt_prevPost != NULL) {
+      $stmt_prevPost->execute();
+      // $stmt_prevPost->store_result();    // unnecessary? don't need b/c only looking for one result/row not a bunch of them?
+      $stmt_prevPost->bind_result($prev_id, $prev_title);
+      $stmt_prevPost->fetch();
+      $stmt_prevPost->close();    // Make sure to close this stmt before executing the next
   }
-  $stmt_latest->close();
+
+  if ($stmt_nextPost != false || $stmt_nextPost != NULL) {
+      $stmt_nextPost->execute();
+      $stmt_nextPost->bind_result($next_id, $next_title);
+      $stmt_nextPost->fetch();
+      $stmt_nextPost->close();
+  }
+
+  if ($stmt_latest != false || $stmt_latest != NULL) {
+      $stmt_latest->execute();
+      $result_latest = $stmt_latest->get_result();
+      if ($result_latest->num_rows > 0) {
+          while ($row = mysqli_fetch_array($result_latest)) {
+              $results_latest[] = $row;
+          }
+      }
+      $stmt_latest->close();
+  }
+
+  if ($stmt_comments = $con->prepare("SELECT commenter_name, date, comment_body FROM comments WHERE post_id = ? ORDER BY date DESC")) {
+      $stmt_comments->bind_param('i', $_GET['post_id']);
+      $stmt_comments->execute();
+      $res_comments = $stmt_comments->get_result();
+      if ($res_comments->num_rows > 0) {
+          while ($row = mysqli_fetch_array($res_comments)) {
+              $res_comments[] = $row;   // Storing all comments in an array
+          }
+      }
+      $stmt_comments->close();
+  } else { 
+      echo "Failed to query comments";
+  }
 
   $con->close();
 ?>
@@ -186,7 +206,7 @@
         <div class="container">
           <!-- Navbar Brand -->
           <div class="navbar-header d-flex align-items-center justify-content-between">
-            <!-- Navbar Brand --><a href="index.php" class="navbar-brand">BlogProject</a>
+            <!-- Navbar Brand --><a href="../index.php" class="navbar-brand">BlogProject</a>
             <!-- Toggle Button-->
             <button type="button" data-toggle="collapse" data-target="#navbarcollapse" aria-controls="navbarcollapse" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"><span></span><span></span><span></span></button>
           </div>
@@ -231,7 +251,7 @@
                     <div class="title"><span><?php echo $creator_name; ?></span></div></a>
                   <div class="d-flex align-items-center flex-wrap">       
                     <div class="date"><i class="icon-clock"></i><?php echo date_format(date_create($date), "h:i A | d-M Y"); ?></div>
-                    <div class="views"><i class="icon-eye"></i> 500</div>
+                    <!-- <div class="views"><i class="icon-eye"></i> 500</div> -->
                     <div class="comments "><i class="icon-comment"></i>12</div>
                     <div class="title meta-last">
                       <?php if ($private == 1) {
@@ -283,10 +303,12 @@
                       <div class="text"></div>
                     <?php endif; ?>
                 </div>
-                <div class="post-comments">
-                  <header>
+                <header style="margin-top: 2em;">
                     <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3>
-                  </header>
+                </header>
+                <div class="post-comments" style="overflow: auto; height: 480px;">  <!-- Height before scrollbar appears roughly allows 3 comments -->
+                  <!-- <header> <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3> </header> -->
+                  
                   <div class="comment">
                     <div class="comment-header d-flex justify-content-between">
                       <div class="user d-flex align-items-center">
@@ -426,15 +448,15 @@
           <div class="col-md-4">
             <div class="latest-posts"><a href="#">
                 <div class="post d-flex align-items-center">
-                  <div class="image"><img src="../img/small-thumbnail-1.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Hotels for all budgets</strong><span class="date last-meta">October 26, 2016</span></div>
                 </div></a><a href="#">
                 <div class="post d-flex align-items-center">
-                  <div class="image"><img src="../img/small-thumbnail-2.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Great street atrs in London</strong><span class="date last-meta">October 26, 2016</span></div>
                 </div></a><a href="#">
                 <div class="post d-flex align-items-center">
-                  <div class="image"><img src="../img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
+                  <div class="image"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Best coffee shops in Sydney</strong><span class="date last-meta">October 26, 2016</span></div>
                 </div></a></div>
           </div>

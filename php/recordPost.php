@@ -41,7 +41,7 @@
         $stmt->execute();
         $_SESSION['post_id'] = mysqli_insert_id($con);  // assigns to the most recent post_id
         // echo $_SESSION['post_id'];
-        header("Location: post.php");
+        header("Location: post.php?post_id={$_SESSION['post_id']}");
         exit();
     } 
     else {

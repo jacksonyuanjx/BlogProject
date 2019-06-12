@@ -83,7 +83,7 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-7">
-            <h1>Bootstrap 4 Blog - A free template by Bootstrap Temple</h1><a href="#" class="hero-link">Discover More</a>
+            <h1>BlogProject</h1><a href="php/blog.php" class="hero-link">Discover More</a>
           </div>
         </div><a href=".intro" class="continue link-scroll"><i class="fas fa-arrow-down"></i> Scroll Down</a>
       </div>
@@ -93,8 +93,14 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-8">
-            <h2 class="h3">Some great intro here</h2>
-            <p class="text-big">Place a nice <strong>introduction</strong> here <strong>to catch reader's attention</strong>. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderi.</p>
+            <h2 class="h3">A place to share</h2>
+            <p class="text-big">This blog was developed primarily for my younger sister for the purpose of allowing her to write daily journals. The blog is developed 
+              using PHP 7, MySQL, HTML 5, and CSS 3 (Bootstrap). 
+              <br/><br/>
+              Currently, the blog enables public/private postings as well as log-in authentication and account creation. 
+              <br/>
+              .... in development
+            </p>
           </div>
         </div>
       </div>
