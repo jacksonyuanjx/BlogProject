@@ -14,13 +14,36 @@
 		    die ('Failed to connect to MySQL: ' . mysqli_connect_error());
     }
 
-    if ($stmt = $con->prepare("INSERT INTO comments (commenter_name, post_id, date, comment_body) VALUES (?,?,?,?)")) {
+    // Ensure that all fields of comment-creation form are complete
+    if (!isset($_POST['name'], $_POST['comment_body']) || $_POST['name'] == "" || $_POST['comment_body'] == "") {
+        $_SESSION['incomplete_comment_err'] = "Please complete out all fields!";
+        header("Location: post.php?post_id={$_SESSION['post_id']}");
+        exit();
+    }
+
+    // Query that inserts comment into `comments` table
+    if ($stmt = $con->prepare("INSERT INTO `comments` (commenter_name, post_id, date, comment_body) VALUES (?,?,?,?)")) {
         date_default_timezone_set('Canada/Pacific');  // php Canada/Pacific timezone is closest to Vancouver time
         // Storing in 24-hr time
         $date = date('Y-m-d H:i:s', time());
         $stmt->bind_param('siss', $_POST['name'], $_GET['post_id'], $date, $_POST['comment_body']);
         $stmt->execute();
+
+        // Increment num_comments for corresponding post
+        if ($stmt_incrComments = $con->prepare("UPDATE posts SET num_comments = num_comments + 1 WHERE post_id = ?")) {
+            $stmt_incrComments->bind_param('i', $_GET['post_id']);
+            $stmt_incrComments->execute();
+            $stmt_incrComments->close();
+        } else {
+            echo "could not update num_comments";
+        }
+
+        header("Location: post.php?post_id={$_SESSION['post_id']}");
+        $stmt->close();
+        exit();
+        // $_SESSION['error'] = $_GET['post_id'];
     } else {
+        $_SESSION['error'] = "error here!";
         echo "Failed to execute SQL stmt";
     }
 

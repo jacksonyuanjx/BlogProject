@@ -174,7 +174,7 @@
                       <!-- Displaying the first 100 characters of post, essentially a summary -->
                       <p class="text-muted"><?php echo substr($results[$i]['post_body'], 0, 100) . "..."; ?></p>  
                       <footer class="post-footer d-flex align-items-center"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>" class="author d-flex align-items-center flex-wrap">
-                          <div class="avatar"><img src="../img/avatar-3.jpg" alt="..." class="img-fluid"></div>
+                          <div class="avatar"><img src="../img/user.svg" alt="..." class="img-fluid"></div>
                           <div class="title"><span><?php echo $results[$i]['creator_name']; ?></span></div></a>
                         <div class="title">
                           <?php if ($results[$i]['private'] == 1) {

@@ -77,8 +77,8 @@
       }
       // $stmt_nextPost->close();
 
-      // Query that retrieves the 3 most recent posts to display max 3 in the 'Latest Posts' section
-      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private FROM posts WHERE creator_id = {$_SESSION['id']} OR private = 0 ORDER BY date DESC LIMIT 0,3")) {
+      // Query that retrieves the 3 most recent posts (by post_id) to display max 3 in the 'Latest Posts' section
+      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE creator_id = {$_SESSION['id']} OR private = 0 ORDER BY post_id DESC LIMIT 0,3")) {
       } else {
           echo "failed query1";
       }
@@ -97,8 +97,8 @@
           echo "stmt_nextPost failed";
       }
 
-      // Query that retrieves the 3 most recent PUBLIC posts to display max 3 in the 'Latest Posts' section
-      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3")) {
+      // Query that retrieves the 3 most recent PUBLIC posts (by post_id) to display max 3 in the 'Latest Posts' section
+      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE private = 0 ORDER BY post_id DESC LIMIT 0,3")) {
       } else {
           echo "failed query1";
       }
@@ -122,21 +122,22 @@
 
   if ($stmt_latest != false || $stmt_latest != NULL) {
       $stmt_latest->execute();
-      $result_latest = $stmt_latest->get_result();
-      if ($result_latest->num_rows > 0) {
-          while ($row = mysqli_fetch_array($result_latest)) {
+      $latest = $stmt_latest->get_result();
+      if ($latest->num_rows > 0) {
+          while ($row = mysqli_fetch_array($latest)) {
               $results_latest[] = $row;
           }
       }
       $stmt_latest->close();
   }
 
+  // Query that gets all the comments
   if ($stmt_comments = $con->prepare("SELECT commenter_name, date, comment_body FROM comments WHERE post_id = ? ORDER BY date DESC")) {
       $stmt_comments->bind_param('i', $_GET['post_id']);
       $stmt_comments->execute();
-      $res_comments = $stmt_comments->get_result();
-      if ($res_comments->num_rows > 0) {
-          while ($row = mysqli_fetch_array($res_comments)) {
+      $comments = $stmt_comments->get_result();
+      if ($comments->num_rows > 0) {
+          while ($row = mysqli_fetch_array($comments)) {
               $res_comments[] = $row;   // Storing all comments in an array
           }
       }
@@ -144,6 +145,7 @@
   } else { 
       echo "Failed to query comments";
   }
+  $_SESSION['post_id'] = $_GET['post_id'];
 
   $con->close();
 ?>
@@ -154,11 +156,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <?php if (isset($_SESSION['error'])): ?>
-      <title><?php echo $_SESSION['error']; ?></title>
-<?php else: ?>
-    <title>BlogProject</title>
-<?php endif; ?>
+      <title>BlogProject</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="all,follow">
@@ -247,12 +245,12 @@
                   <!-- <a href="#"><i class="fa fa-bookmark-o"></i></a> -->
                 </h1>
                 <div class="post-footer d-flex align-items-center flex-column flex-sm-row"><a href="#" class="author d-flex align-items-center flex-wrap">
-                    <div class="avatar"><img src="../img/avatar-1.jpg" alt="..." class="img-fluid"></div>
+                    <div class="avatar"><img src="../img/user.svg" alt="..." class="img-fluid"></div>
                     <div class="title"><span><?php echo $creator_name; ?></span></div></a>
                   <div class="d-flex align-items-center flex-wrap">       
                     <div class="date"><i class="icon-clock"></i><?php echo date_format(date_create($date), "h:i A | d-M Y"); ?></div>
                     <!-- <div class="views"><i class="icon-eye"></i> 500</div> -->
-                    <div class="comments "><i class="icon-comment"></i>12</div>
+                    <div class="comments "><i class="icon-comment"></i><?php echo $comments->num_rows; ?></div>
                     <div class="title meta-last">
                       <?php if ($private == 1) {
                         ?><i class="fas fa-lock"></i> Private<?php 
@@ -303,63 +301,56 @@
                       <div class="text"></div>
                     <?php endif; ?>
                 </div>
+
+                <!-- Display comments -->
                 <header style="margin-top: 2em;">
-                    <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3>
+                    <h3 class="h6">Post Comments<span class="no-of-comments"> &nbsp;&nbsp;(<?php echo $comments->num_rows; ?>)</span></h3>
                 </header>
-                <div class="post-comments" style="overflow: auto; height: 480px;">  <!-- Height before scrollbar appears roughly allows 3 comments -->
-                  <!-- <header> <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3> </header> -->
-                  
-                  <div class="comment">
-                    <div class="comment-header d-flex justify-content-between">
-                      <div class="user d-flex align-items-center">
-                        <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
-                        <div class="title"><strong>Jabi Hernandiz</strong><span class="date">May 2016</span></div>
-                      </div>
+                
+                  <?php if (isset($res_comments)): ?>
+                    <div class="post-comments" style="overflow: auto; height: 375px;">  <!-- Height before scrollbar appears roughly allows 3 comments -->
+                    <!-- <header> <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3> </header> -->
+                    <?php for ($i = 0; $i < sizeof($res_comments); $i++) { ?>
+                      <div class="comment">
+                        <div class="comment-header d-flex justify-content-between">
+                          <div class="user d-flex align-items-center">
+                            <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
+                            <div class="title">
+                              <strong><?php echo $res_comments[$i]['commenter_name']; ?></strong>
+                              <span class="date"><?php echo date_format(date_create($res_comments[$i]['date']), "h:i A | d-M Y "); ?></span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="comment-body">
+                          <p><?php echo $res_comments[$i]['comment_body']; ?></p>
+                        </div>
+                      </div> <?php
+                    } ?>
                     </div>
-                    <div class="comment-body">
-                      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</p>
-                    </div>
-                  </div>
-                  <div class="comment">
-                    <div class="comment-header d-flex justify-content-between">
-                      <div class="user d-flex align-items-center">
-                        <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
-                        <div class="title"><strong>Nikolas</strong><span class="date">May 2016</span></div>
-                      </div>
-                    </div>
-                    <div class="comment-body">
-                      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</p>
-                    </div>
-                  </div>
-                  <div class="comment">
-                    <div class="comment-header d-flex justify-content-between">
-                      <div class="user d-flex align-items-center">
-                        <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
-                        <div class="title"><strong>John Doe</strong><span class="date">May 2016</span></div>
-                      </div>
-                    </div>
-                    <div class="comment-body">
-                      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</p>
-                    </div>
-                  </div>
-                </div>
+                <?php endif; ?>
+                <!-- </div> -->
+
+                <!-- Add a comment -->
                 <div class="add-comment">
                   <header>
                     <h3 class="h6">Leave a reply</h3>
                   </header>
-                  <form action="#" class="commenting-form">
+                  <form action="recordComment.php?post_id=<?php echo $_GET['post_id']; ?>" class="commenting-form" method="post">
                     <div class="row">
                       <div class="form-group col-md-6">
-                        <input type="text" name="username" id="username" placeholder="Name" class="form-control">
+                        <input type="text" name="name" id="username" placeholder="Name" class="form-control" required>
                       </div>
-                      <div class="form-group col-md-6">
+                      <!-- <div class="form-group col-md-6">
                         <input type="email" name="username" id="useremail" placeholder="Email Address (will not be published)" class="form-control">
-                      </div>
+                      </div> -->
                       <div class="form-group col-md-12">
-                        <textarea name="usercomment" id="usercomment" placeholder="Type your comment" class="form-control"></textarea>
+                        <textarea name="comment_body" id="usercomment" placeholder="Type your comment" class="form-control" required></textarea>
                       </div>
                       <div class="form-group col-md-12">
                         <button type="submit" class="btn btn-secondary">Submit Comment</button>
+                        <?php if (isset($_SESSION['incomplete_comment_err'])): ?><
+                          <p style="display: inline; color: blue;"><?php echo $_SESSION['incomplete_comment_err']; ?></p>
+                        <?php unset($_SESSION['incomplete_comment_err']); endif; ?>
                       </div>
                     </div>
                   </form>
@@ -396,7 +387,7 @@
                         <div class="d-flex align-items-center">
                           <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
                           <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M | Y"); ?></div>
-                          <div class="comments"><i class="icon-comment"></i>12</div>
+                          <div class="comments"><i class="icon-comment"></i><?php echo $results_latest[$i]['num_comments']; ?></div>
                         </div>
                       </div>
                     </div>
