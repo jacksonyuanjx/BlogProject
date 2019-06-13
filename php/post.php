@@ -84,8 +84,8 @@
       }
       // $stmt_nextPost->close();
 
-      // Query that retrieves the 3 most recent posts (by post_id) to display max 3 in the 'Latest Posts' section
-      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE creator_id = {$_SESSION['id']} OR private = 0 ORDER BY post_id DESC LIMIT 0,3")) {
+      // Query that retrieves the 3 most recent posts (by date) to display max 3 in the 'Latest Posts' section
+      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE creator_id = {$_SESSION['id']} OR private = 0 ORDER BY date DESC LIMIT 0,3")) {
       } else {
           echo "failed query1";
       }
@@ -97,7 +97,7 @@
           echo "stmt_prevPost failed";
       }
 
-      // Query selects the next non-private post by date
+      // Query selects the next non-private post by post_id
       if ($stmt_nextPost = $con->prepare("SELECT post_id, title FROM posts WHERE post_id > {$_SESSION['post_id']} AND private = 0 ORDER BY post_id ASC LIMIT 1")) {
       } else {
           $_SESSION['failed to prepare nextPost'];
@@ -105,7 +105,7 @@
       }
 
       // Query that retrieves the 3 most recent PUBLIC posts (by post_id) to display max 3 in the 'Latest Posts' section
-      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE private = 0 ORDER BY post_id DESC LIMIT 0,3")) {
+      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3")) {
       } else {
           echo "failed query1";
       }
@@ -312,11 +312,8 @@
                     <?php endif; ?>
                 </div>
 
-                <!-- Display comments -->
-                <header style="margin-top: 2em;">
-                    <h3 class="h6">Post Comments<span class="no-of-comments"> &nbsp;&nbsp;(<?php echo $comments->num_rows; ?>)</span></h3>
-                </header>
-                
+
+                <!-- JS that sends cookie storing comment_id to delete for access in deleteComment.php -->
                 <script type="text/Javascript">
                   $(document).ready(function() {
                     console.log("ready");
@@ -329,6 +326,13 @@
                     });
                   });
                 </script>
+
+                <!-- Display comments -->
+                <header style="margin-top: 2em;">
+                    <a name="anchorAfterDeleteComment" style="width=0px; height=0px;"></a>
+                    <h3 class="h6">Post Comments<span class="no-of-comments"> &nbsp;&nbsp;(<?php echo $comments->num_rows; ?>)</span></h3>
+                </header>
+                
                 <?php if (isset($res_comments)): ?>
                   <div class="post-comments" style="overflow: auto; height: 375px;">  <!-- Height before scrollbar appears roughly allows 3 comments -->
                   <!-- <header> <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3> </header> -->

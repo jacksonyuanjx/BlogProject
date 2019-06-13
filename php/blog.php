@@ -34,7 +34,7 @@
     // Query that retrieves the 4 most recent posts by currently logged-in user in order from most recent --> least recent, depending on current page
     $limit_offset = ($_GET['page'] - 1) * 4;
     $limit_count = ($totalNumPosts - $limit_offset) < 4 ? $totalNumPosts - $limit_offset : 4;
-    if ($stmt_recentPosts = $con->prepare("SELECT post_id, creator_name, date, title, post_body, private FROM posts WHERE private = 0 ORDER BY date DESC LIMIT " . $limit_offset . "," . $limit_count)) {
+    if ($stmt_recentPosts = $con->prepare("SELECT post_id, creator_name, date, title, post_body, private, num_comments FROM posts WHERE private = 0 ORDER BY date DESC LIMIT " . $limit_offset . "," . $limit_count)) {
         $stmt_recentPosts->execute();
         $result = $stmt_recentPosts->get_result();
         if ($result->num_rows > 0) {
@@ -52,11 +52,11 @@
     $stmt_recentPosts->close();
     
     // Query that retrieves the 3 most recent PUBLIC posts to display max 3 in the 'Latest Posts" section
-    if ($stmt_latest = $con->prepare('SELECT post_id, creator_name, date, title, private FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3')) {
+    if ($stmt_latest = $con->prepare('SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3')) {
         $stmt_latest->execute();
-        $result_latest = $stmt_latest->get_result();
-        if ($result_latest->num_rows > 0) {
-            while ($row = mysqli_fetch_array($result_latest)) {
+        $latest = $stmt_latest->get_result();
+        if ($latest->num_rows > 0) {
+            while ($row = mysqli_fetch_array($latest)) {
                 $results_latest[] = $row;
             }
         }
@@ -153,7 +153,7 @@
         <main class="posts-listing col-lg-8"> 
           <div class="container">
             <div class="row">
-              <!-- post -->
+              <!-- Post -->
               <?php if (isset($results)) {
                 for ($i = 0; $i < $limit_count; $i++) { ?>
                   <div class="post col-xl-6">
@@ -177,7 +177,7 @@
                             ?><i class="fas fa-unlock"></i> Public<?php
                           } ?>
                         </div>
-                        <div class="comments meta-last"><i class="icon-comment"></i>12</div>
+                        <div class="comments meta-last"><i class="icon-comment"></i><?php echo $results[$i]['num_comments']; ?></div>
                       </footer>
                     </div>
                   </div>
@@ -263,7 +263,7 @@
                         <div class="d-flex align-items-center">
                           <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
                           <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M | Y"); ?></div>
-                          <div class="comments"><i class="icon-comment"></i>12</div>
+                          <div class="comments"><i class="icon-comment"></i><?php echo $results_latest[$i]['num_comments']; ?></div>
                         </div>
                       </div>
                     </div>

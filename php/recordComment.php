@@ -29,6 +29,7 @@
         $date = date('Y-m-d H:i:s', time());
         $stmt->bind_param('siss', $_POST['name'], $_GET['post_id'], $date, $_POST['comment_body']);
         $stmt->execute();
+        $stmt->close();
 
         // Increment num_comments for corresponding post
         if ($stmt_incrComments = $con->prepare("UPDATE posts SET num_comments = num_comments + 1 WHERE post_id = ?")) {
@@ -44,7 +45,6 @@
         } else {
             header("Location: post.php?post_id={$_SESSION['post_id']}");
         }
-        $stmt->close();
         exit();
         // $_SESSION['error'] = $_GET['post_id'];
     } else {
