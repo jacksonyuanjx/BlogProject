@@ -79,13 +79,15 @@
       </nav>
     </header>
     <!-- Hero Section-->
-    <section style="background: url(img/hero.jpg); background-size: cover; background-position: center center" class="hero">
+    <section style="background: url(img/mountains.jpg); background-size: cover; background-position: center center" class="hero">
       <div class="container">
         <div class="row">
           <div class="col-lg-7">
-            <h1>BlogProject</h1><a href="php/blog.php" class="hero-link">Discover More</a>
+            <h1>BlogProject</h1>
+            <a href=".intro" class="hero-link link-scroll">Discover More &nbsp;<i class="fas fa-arrow-down"></i></a>
           </div>
-        </div><a href=".intro" class="continue link-scroll"><i class="fas fa-arrow-down"></i> Scroll Down</a>
+        </div>
+        <!-- <a href=".intro" class="continue link-scroll"><i class="fas fa-arrow-down"></i> Scroll Down</a> -->
       </div>
     </section>
     <!-- Intro Section-->

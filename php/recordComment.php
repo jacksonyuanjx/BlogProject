@@ -15,6 +15,7 @@
     }
 
     // Ensure that all fields of comment-creation form are complete
+    // Note: should not reach here as input tags have 'required' field set, feature of HTML 5
     if (!isset($_POST['name'], $_POST['comment_body']) || $_POST['name'] == "" || $_POST['comment_body'] == "") {
         $_SESSION['incomplete_comment_err'] = "Please complete out all fields!";
         header("Location: post.php?post_id={$_SESSION['post_id']}");
@@ -37,8 +38,12 @@
         } else {
             echo "could not update num_comments";
         }
-
-        header("Location: post.php?post_id={$_SESSION['post_id']}");
+        
+        if (isset($_GET['publicPost'])) {
+            header("Location: post.php?post_id={$_SESSION['post_id']}&publicPost=1");
+        } else {
+            header("Location: post.php?post_id={$_SESSION['post_id']}");
+        }
         $stmt->close();
         exit();
         // $_SESSION['error'] = $_GET['post_id'];

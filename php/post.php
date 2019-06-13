@@ -2,10 +2,11 @@
   session_start(); 
   
   if (isset($_GET['publicPost'])) {
-      // Case where navigated to this page from the public blog.php page
+      // Case where navigated to this page from the public blog.php page, will enter this case whether logged-in or not
+      // Case of manipulating URL to have 'publicPost' to view private posts is handled after $private var is set, checking if post is private or not
       $_SESSION['post_id'] = $_GET['post_id'];
-      unset($_GET['publicPost']);
   } elseif (!isset($_SESSION['post_id'], $_SESSION['loggedin'])) {
+      // Case where either no post_id assigned or user is not logged-in
       header('Location: login.php');
       exit();
   }
@@ -49,6 +50,12 @@
       // echo $date;
   } else {
       echo "stmt_postDetails failed";
+  }
+
+  // If no one is logged in and post is private, force log-in
+  if (!isset($_SESSION['loggedin']) && $private == 1) {
+      header("Location: login.php");
+      exit();
   }
 
   $dateObj = strtotime($date);
@@ -132,7 +139,7 @@
   }
 
   // Query that gets all the comments
-  if ($stmt_comments = $con->prepare("SELECT commenter_name, date, comment_body FROM comments WHERE post_id = ? ORDER BY date DESC")) {
+  if ($stmt_comments = $con->prepare("SELECT comment_id, commenter_name, date, comment_body FROM comments WHERE post_id = ? ORDER BY date DESC")) {
       $stmt_comments->bind_param('i', $_GET['post_id']);
       $stmt_comments->execute();
       $comments = $stmt_comments->get_result();
@@ -146,6 +153,7 @@
       echo "Failed to query comments";
   }
   $_SESSION['post_id'] = $_GET['post_id'];
+
 
   $con->close();
 ?>
@@ -177,6 +185,8 @@
     <link rel="stylesheet" href="../css/custom.css">
     <!-- Favicon-->
     <!-- <link rel="shortcut icon" href="../favicon.png"> -->
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="../js/deleteComment.js"></script>
 
     <!-- Tweaks for older IEs--><!--[if lt IE 9]>
         <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -307,44 +317,86 @@
                     <h3 class="h6">Post Comments<span class="no-of-comments"> &nbsp;&nbsp;(<?php echo $comments->num_rows; ?>)</span></h3>
                 </header>
                 
-                  <?php if (isset($res_comments)): ?>
-                    <div class="post-comments" style="overflow: auto; height: 375px;">  <!-- Height before scrollbar appears roughly allows 3 comments -->
-                    <!-- <header> <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3> </header> -->
-                    <?php for ($i = 0; $i < sizeof($res_comments); $i++) { ?>
-                      <div class="comment">
-                        <div class="comment-header d-flex justify-content-between">
-                          <div class="user d-flex align-items-center">
-                            <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
-                            <div class="title">
-                              <strong><?php echo $res_comments[$i]['commenter_name']; ?></strong>
-                              <span class="date"><?php echo date_format(date_create($res_comments[$i]['date']), "h:i A | d-M Y "); ?></span>
-                            </div>
+                <script type="text/Javascript">
+                  $(document).ready(function() {
+                    console.log("ready");
+                    $(document).on("click", ".open-DeleteCommentModal", function () {
+                        var comment_id = $(this).data('id');
+                        $(".modal-footer #comment_id").val( comment_id );
+                        console.log("clicked on: " + comment_id);
+                        document.cookie = "comment_id = " + comment_id;
+                        
+                    });
+                  });
+                </script>
+                <?php if (isset($res_comments)): ?>
+                  <div class="post-comments" style="overflow: auto; height: 375px;">  <!-- Height before scrollbar appears roughly allows 3 comments -->
+                  <!-- <header> <h3 class="h6">Post Comments<span class="no-of-comments">(3)</span></h3> </header> -->
+                  <?php for ($i = 0; $i < sizeof($res_comments); $i++) { ?>
+                    <div class="comment">
+                      <div class="comment-header d-flex justify-content-between">
+                        <div class="user d-flex align-items-center">
+                          <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
+                          <div class="title">
+                              <strong>
+                              <?php echo $res_comments[$i]['commenter_name']; ?>
+
+                                
+                              </strong>
+                            <span class="date">
+                              <?php echo date_format(date_create($res_comments[$i]['date']), "h:i A | d-M Y "); ?>
+                            </span>
                           </div>
                         </div>
-                        <div class="comment-body">
-                          <p><?php echo $res_comments[$i]['comment_body']; ?></p>
-                        </div>
-                      </div> <?php
-                    } ?>
-                    </div>
+                      </div>
+                      <div class="comment-body">
+                        <p><?php echo $res_comments[$i]['comment_body']; ?></p>
+                        <?php if (isset($_SESSION['loggedin']) && $creator_id == $_SESSION['id'] && $creator_name == $_SESSION['name']): ?>
+                          <span>
+                            <a class="open-DeleteCommentModal" data-id="<?php echo $res_comments[$i]['comment_id']; ?>" href="#myModal" data-toggle="modal" data-target="#myModal" style="border:none;"><i class="far fa-trash-alt"></i></a>
+                          </span>
+                        <?php endif; ?>  
+                      </div>
+                    </div> <?php
+                  } ?>
+                  </div>
                 <?php endif; ?>
-                <!-- </div> -->
+
+                <div id="myModal" class="modal fade">
+                  <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                      <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal">&times;</button>
+                          <h4 class="modal-title">Delete this comment?</h4>
+                      </div>
+                      <div class="modal-body">
+                        <p style="text-transform: none;">You cannot retrieve a deleted comment. Are you sure you would like to proceed?</p>
+                      </div>
+                      <div class="modal-footer">
+                        <a name="comment_id" id="comment_id" href="deleteComment.php?post_id=<?php echo $_GET['post_id']; if (isset($_GET['publicPost']) && $_GET['publicPost'] == 1): ?>&publicPost=1<?php endif; ?>" class="deleteBtn">Delete</a>
+                        <a class="closeBtn" data-dismiss="modal">Close</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
 
                 <!-- Add a comment -->
                 <div class="add-comment">
                   <header>
                     <h3 class="h6">Leave a reply</h3>
                   </header>
-                  <form action="recordComment.php?post_id=<?php echo $_GET['post_id']; ?>" class="commenting-form" method="post">
+                  <form action="recordComment.php?post_id=<?php echo $_GET['post_id']; if (isset($_GET['publicPost']) && $_GET['publicPost'] == 1): ?>&publicPost=1<?php endif; ?>" class="commenting-form" method="post">
                     <div class="row">
                       <div class="form-group col-md-6">
-                        <input type="text" name="name" id="username" placeholder="Name" class="form-control" required>
+                        <input type="text" name="name" id="username" placeholder="Name" class="form-control" maxlength="50" required>
                       </div>
                       <!-- <div class="form-group col-md-6">
                         <input type="email" name="username" id="useremail" placeholder="Email Address (will not be published)" class="form-control">
                       </div> -->
                       <div class="form-group col-md-12">
-                        <textarea name="comment_body" id="usercomment" placeholder="Type your comment" class="form-control" required></textarea>
+                        <textarea name="comment_body" id="usercomment" placeholder="Type your comment" class="form-control" maxlength="255" required></textarea>
                       </div>
                       <div class="form-group col-md-12">
                         <button type="submit" class="btn btn-secondary">Submit Comment</button>
@@ -469,7 +521,6 @@
       </div>
     </footer>
     <!-- Javascript files-->
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"> </script>
     <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
     <script src="../vendor/jquery.cookie/jquery.cookie.js"> </script>
