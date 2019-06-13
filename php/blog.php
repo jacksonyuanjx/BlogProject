@@ -134,7 +134,7 @@
               <!-- <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li> -->
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="yourPosts.php" class="nav-link ">Your Posts</a></li>
-                <li class="nav-item"><a href="newPost.php" class="nav-link">New Post</a></li>
+                <li class="nav-item"><a href="newPost.php" class="nav-link"><i class="far fa-plus-square"></i> New Post</a></li>
                 <li class="nav-item"><a href="profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']?></a></li>
                 <li class="nav-item"><a href="logout.php" class="nav-link">Logout</a></li>
               <?php elseif(!isset($_SESSION['loggedin']) || !isset($_SESSION['name'])): ?>

@@ -17,6 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/newPost.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 </head>
@@ -40,17 +41,17 @@
                 <!-- Modal Body -->
                 <div class="modal-body">
                     
-                    <form class="form-horizontal" role="form" action="recordPost.php" method="post"> 
+                    <form class="form-horizontal" role="form" action="recordPost.php" method="POST" enctype="multipart/form-data"> 
                         <div class="form-group">
                             <label class="col-sm-2 control-label">Title</label>
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" placeholder="Title" name="title" maxlength="120"/>
+                                <input type="text" class="form-control" placeholder="Title" name="title" maxlength="120" required/>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-2 control-label">Post</label>
                             <div class="col-sm-10">
-                                <textarea class="form-control" name="post_body" cols="30" rows="3"></textarea>
+                                <textarea class="form-control" name="post_body" cols="30" rows="3" required></textarea>
                             </div>
                         </div>
                         <!-- <div class="form-group">
@@ -71,9 +72,14 @@
                                     <input type="checkbox" name="private" value="1"/>Private Post
                                 </label>
                             </div>
-                            <?php if (isset($_SESSION['incomplete_post_err'])): ?>
-                                <p style="color: blue; margin: 10px;"><br/><br/><?php echo $_SESSION['incomplete_post_err']?></p>
-                            <?php unset($_SESSION['incomplete_post_err']); endif; ?>
+                            <div>
+                                <br/><br/>
+                                <i class='fas fa-file-upload' style="margin-left: 7.5px;"> Image:</i> 
+                                <input type="file" name="imgToUpload" id="imgToUpload" style="margin-left: 7.5px;" >
+                                <?php if (isset($_SESSION['incomplete_post_err'])): ?>
+                                    <p style="color: blue; margin: 10px;"><?php echo $_SESSION['incomplete_post_err']?></p>
+                                <?php unset($_SESSION['incomplete_post_err']); endif; ?>
+                            </div>
                         </div>
                     </form>
 

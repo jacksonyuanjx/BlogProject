@@ -186,7 +186,6 @@
     <!-- Favicon-->
     <!-- <link rel="shortcut icon" href="../favicon.png"> -->
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script src="../js/deleteComment.js"></script>
 
     <!-- Tweaks for older IEs--><!--[if lt IE 9]>
         <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -391,7 +390,7 @@
                   <header>
                     <h3 class="h6">Leave a reply</h3>
                   </header>
-                  <form action="recordComment.php?post_id=<?php echo $_GET['post_id']; if (isset($_GET['publicPost']) && $_GET['publicPost'] == 1): ?>&publicPost=1<?php endif; ?>" class="commenting-form" method="post">
+                  <form action="recordComment.php?post_id=<?php echo $_GET['post_id']; if (isset($_GET['publicPost']) && $_GET['publicPost'] == 1): ?>&publicPost=1<?php endif; ?>" class="commenting-form" method="POST">
                     <div class="row">
                       <div class="form-group col-md-6">
                         <input type="text" name="name" id="username" placeholder="Name" class="form-control" maxlength="50" required>
