@@ -47,6 +47,8 @@
       $stmt_postDetails->fetch();
       $stmt_postDetails->close();
       
+      $_SESSION['creator_id'] = $creator_id;
+
       if (!isset($img_path) || $img_path == "" || $img_path == NULL) {
           $img_path = "../uploads/default.jpeg";
       }
@@ -321,16 +323,14 @@
                   $(document).ready(function() {
                     $(document).on("click", ".open-DeleteCommentModal", function () {
                         var comment_id = $(this).data('id');
-                        $(".modal-footer #comment_id").val( comment_id );
                         document.cookie = "comment_id = " + comment_id;
-                        
                     });
                   });
                 </script>
 
                 <!-- Display comments -->
                 <header style="margin-top: 2em;">
-                    <a name="anchorAfterDeleteComment" style="width=0px; height=0px;"></a>
+                    <a name="anchorComment" style="width=0px; height=0px;"></a>
                     <h3 class="h6">Post Comments<span class="no-of-comments"> &nbsp;&nbsp;(<?php echo $comments->num_rows; ?>)</span></h3>
                 </header>
                 
@@ -344,9 +344,7 @@
                           <div class="image"><img src="../img/user.svg" alt="..." class="img-fluid rounded-circle"></div>
                           <div class="title">
                               <strong>
-                              <?php echo $res_comments[$i]['commenter_name']; ?>
-
-                                
+                                <?php echo $res_comments[$i]['commenter_name']; ?>
                               </strong>
                             <span class="date">
                               <?php echo date_format(date_create($res_comments[$i]['date']), "h:i A | d-M Y "); ?>
@@ -367,6 +365,7 @@
                   </div>
                 <?php endif; ?>
 
+                <!-- Delete comment modal -->
                 <div id="myModal" class="modal fade">
                   <div class="modal-dialog">
                     <!-- Modal content-->

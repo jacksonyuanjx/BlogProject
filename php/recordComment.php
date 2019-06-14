@@ -41,9 +41,9 @@
         }
         
         if (isset($_GET['publicPost'])) {
-            header("Location: post.php?post_id={$_SESSION['post_id']}&publicPost=1");
+            header("Location: post.php?post_id={$_SESSION['post_id']}&publicPost=1#anchorComment");
         } else {
-            header("Location: post.php?post_id={$_SESSION['post_id']}");
+            header("Location: post.php?post_id={$_SESSION['post_id']}#anchorComment");
         }
         exit();
         // $_SESSION['error'] = $_GET['post_id'];

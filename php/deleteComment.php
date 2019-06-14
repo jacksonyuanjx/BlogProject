@@ -1,14 +1,24 @@
 <?php
     // Script that deletes a comment ONLY if the currently logged-in user is the author of the post
+    // ^^Above condition is verified here below as well as in post.php by not displaying the delete button
+    // NOTE CHECK IF USER IS CORRECT AUTHOR
 
     session_start();
-    // echo $_GET['post_id'] . " " . $_GET['comment_id'] " ";
+
+    if (isset($_SESSION['loggedin'], $_SESSION['id'])) {
+        if ($_SESSION['id'] != $_SESSION['creator_id']) {
+            header("Location: login.php");
+            exit();
+        }
+    } else {
+        // Not logged in so definitely redirect to login.php
+        header("Location: login.php");
+        exit();
+    }
     $_SESSION['commentToDelete'] = $_COOKIE['comment_id'];
-    // unset($_COOKIE['comment_id']);   // Does not actually delete the cookie
     setcookie('comment_id', "", time()-3600);   // Deleting the cookie by: setting the same cookie with NO value and a time in the past (expired)
 
     if (isset($_SESSION['commentToDelete'])) {
-        echo $_SESSION['commentToDelete'];
         
         $DATABASE_HOST = 'localhost';
         $DATABASE_USER = 'root';
@@ -26,6 +36,7 @@
         if ($stmt_delete = $con->prepare("DELETE FROM comments WHERE comment_id = ?")) {
             $stmt_delete->bind_param('i', $_SESSION['commentToDelete']);
             $stmt_delete->execute();
+            $stmt_delete->close();
 
             // Decrement num_comments for corresponding post
             if ($stmt_incrComments = $con->prepare("UPDATE posts SET num_comments = num_comments - 1 WHERE post_id = ?")) {
@@ -39,13 +50,21 @@
             // Redirect depending on whether navigated from blog.php or yourPosts.php
             if (isset($_GET['publicPost']) && $_GET['publicPost'] == 1) {
                 // navigated from blog.php
-                header("Location: post.php?post_id={$_GET['post_id']}&publicPost=1#anchorAfterDeleteComment");
+                header("Location: post.php?post_id={$_GET['post_id']}&publicPost=1#anchorComment");
+                exit();
             } else {
-                header("Location: post.php?post_id={$_GET['post_id']}#anchorAfterDeleteComment");
+                header("Location: post.php?post_id={$_GET['post_id']}#anchorComment");
+                exit();
             }
+
         } else {
             echo "Failed to delete comment";
         }
+
+        // Unset all newly declared session vars
+        unset($_SESSION['commentToDelete']);
+        unset($_SESSION['creator_id']);
+
     }
 
 ?>

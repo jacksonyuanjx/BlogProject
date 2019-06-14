@@ -37,7 +37,7 @@
     // Query that retrieves the 4 most recent posts by currently logged-in user in order from most recent --> least recent, depending on current page
     $limit_offset = ($_GET['page'] - 1) * 4;
     $limit_count = ($totalNumPosts - $limit_offset) < 4 ? $totalNumPosts - $limit_offset : 4;
-    if ($stmt_recentPosts = $con->prepare('SELECT post_id, creator_name, date, title, post_body, private, num_comments, img_path FROM posts WHERE creator_id = ? ORDER BY date DESC LIMIT ' . $limit_offset . ',' . $limit_count)) {
+    if ($stmt_recentPosts = $con->prepare('SELECT post_id, creator_id, creator_name, date, title, post_body, private, num_comments, img_path FROM posts WHERE creator_id = ? ORDER BY post_id DESC LIMIT ' . $limit_offset . ',' . $limit_count)) {
         $stmt_recentPosts->bind_param('s', $_SESSION['id']);
         $stmt_recentPosts->execute();
         $result = $stmt_recentPosts->get_result();
@@ -101,6 +101,7 @@
     <link rel="stylesheet" href="../css/custom.css">
     <!-- Favicon-->
     <!-- <link rel="shortcut icon" href="../favicon.png"> -->
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
     <!-- Tweaks for older IEs--><!--[if lt IE 9]>
         <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -153,6 +154,23 @@
         </div>
       </nav>
     </header>
+
+
+    <!-- JS that sends cookie storing post_id to delete for access in deletePost.php -->
+    <script type="text/Javascript">
+      $(document).ready(function() {
+        $(document).on("click", ".open-DeletePostModal", function () {
+            var post_id = $(this).data('id');
+            var img_path = $(this).data('img');
+            var creator_id = $(this).data('creator_id');
+            
+            document.cookie = "post_id = " + post_id;
+            document.cookie = "img_path = " + img_path;
+            document.cookie = "creator_id = " + creator_id;
+        });
+      });
+    </script>
+
     <div class="container">
       <div class="row">
         <!-- Posts (4 per page) -->
@@ -165,29 +183,39 @@
                   <div class="post col-xl-6">
                     <div class="post-thumbnail">
                       <a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>">
-                        <img src="<?php if (!isset($results[$i]['img_path']) || $results[$i]['img_path'] == "" || $results[$i]['img_path'] == NULL) { $results[$i]['img_path'] = "../uploads/default.jpeg"; echo $results[$i]['img_path']; } else { echo $results[$i]['img_path']; } ?>" alt="..." class="img-fluid">
+                        <img style="width: 400px; height: 225px;" src="<?php if (!isset($results[$i]['img_path']) || $results[$i]['img_path'] == "" || $results[$i]['img_path'] == NULL) { $results[$i]['img_path'] = "../uploads/default.jpeg"; echo $results[$i]['img_path']; } else { echo $results[$i]['img_path']; } ?>" alt="..." class="img-fluid">
                       </a>
                     </div>
                     <div class="post-details">
                       <div class="post-meta d-flex justify-content-between">
                         <div class="date meta-last"><?php echo date_format(date_create($results[$i]['date']), "d-M | Y"); ?></div>
+                        <!-- Delete post button -->
+                        <a class="date meta-last open-DeletePostModal" 
+                            data-id="<?php echo $results[$i]['post_id']; ?>" 
+                            data-img="<?php echo $results[$i]['img_path']; ?>" 
+                            data-creator_id="<?php echo $results[$i]['creator_id']; ?>"
+                            href="#myModal" data-toggle="modal" data-target="#myModal" 
+                            style="border:none;">
+                            <i class="far fa-trash-alt"></i>
+                        </a>
                         <!-- <div class="category"><a href="#">Business</a></div> -->
-                        <!-- UPDATE THIS LINK BELOW -->
-                      </div><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>">
-                        <h3 class="h4"><?php echo $results[$i]['title']; ?></h3></a>
+                      </div>
+                      <a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>">
+                        <h3 class="h4"><?php echo $results[$i]['title']; ?></h3>
+                      </a>
                       <!-- Displaying the first 100 characters of post, essentially a summary -->
                       <p class="text-muted"><?php echo substr($results[$i]['post_body'], 0, 100) . "..."; ?></p>  
                       <footer class="post-footer d-flex align-items-center"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>" class="author d-flex align-items-center flex-wrap">
                           <div class="avatar"><img src="../img/user.svg" alt="..." class="img-fluid"></div>
                           <div class="title"><span><?php echo $results[$i]['creator_name']; ?></span></div></a>
-                        <div class="title">
-                          <?php if ($results[$i]['private'] == 1) {
-                            ?><i class="fas fa-lock"></i> Private<?php 
-                          } else {
-                            ?><i class="fas fa-unlock"></i> Public<?php
-                          } ?>
-                        </div>
-                        <div class="comments meta-last"><i class="icon-comment"></i><?php echo $results[$i]['num_comments']; ?></div>
+                          <div class="title">
+                            <?php if ($results[$i]['private'] == 1) {
+                              ?><i class="fas fa-lock"></i> Private<?php 
+                            } else {
+                              ?><i class="fas fa-unlock"></i> Public<?php
+                            } ?>
+                          </div>
+                          <div class="comments meta-last"><i class="icon-comment"></i><?php echo $results[$i]['num_comments']; ?></div>
                       </footer>
                     </div>
                   </div>
@@ -216,6 +244,28 @@
                 </div>
               </div> -->
             </div>
+
+            <!-- Delete post modal -->
+            <div id="myModal" class="modal fade" style="padding-top: 150px;">
+              <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                  <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal">&times;</button>
+                      <h4 class="modal-title">Delete this post?</h4>
+                  </div>
+                  <div class="modal-body">
+                    <p style="text-transform: none;">You cannot retrieve a deleted post. Are you sure you would like to proceed?</p>
+                  </div>
+                  <div class="modal-footer">
+                    <a name="post_id" id="post_id" href="deletePost.php" class="deleteBtn">Delete</a>
+                    <a class="closeBtn" data-dismiss="modal">Close</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+
             <!-- Pagination -->
             <nav aria-label="Page navigation example">
               <ul class="pagination pagination-template d-flex justify-content-center">
@@ -379,7 +429,6 @@
       </div>
     </footer>
     <!-- Javascript files-->
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"> </script>
     <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
     <script src="../vendor/jquery.cookie/jquery.cookie.js"> </script>

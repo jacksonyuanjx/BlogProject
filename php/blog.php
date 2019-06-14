@@ -34,7 +34,7 @@
     // Query that retrieves the 4 most recent posts by currently logged-in user in order from most recent --> least recent, depending on current page
     $limit_offset = ($_GET['page'] - 1) * 4;
     $limit_count = ($totalNumPosts - $limit_offset) < 4 ? $totalNumPosts - $limit_offset : 4;
-    if ($stmt_recentPosts = $con->prepare("SELECT post_id, creator_name, date, title, post_body, private, num_comments, img_path FROM posts WHERE private = 0 ORDER BY date DESC LIMIT " . $limit_offset . "," . $limit_count)) {
+    if ($stmt_recentPosts = $con->prepare("SELECT post_id, creator_name, date, title, post_body, private, num_comments, img_path FROM posts WHERE private = 0 ORDER BY post_id DESC LIMIT " . $limit_offset . "," . $limit_count)) {
         $stmt_recentPosts->execute();
         $result = $stmt_recentPosts->get_result();
         if ($result->num_rows > 0) {
