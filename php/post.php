@@ -36,16 +36,20 @@
     // }
   }
 
-  if ($stmt_postDetails = $con->prepare('SELECT creator_id, creator_name, date, title, post_body, private FROM posts WHERE post_id = ?')) {
+  if ($stmt_postDetails = $con->prepare('SELECT creator_id, creator_name, date, title, post_body, private, img_path FROM posts WHERE post_id = ?')) {
       // Binding parameter
       $stmt_postDetails->bind_param('i', $_SESSION['post_id']);
       $stmt_postDetails->execute();
       // $stmt_postDetails->store_result();  // Storing result to assign to variables for displaying in html
       
       // Assigning query results into variables
-      $stmt_postDetails->bind_result($creator_id, $creator_name, $date, $title, $post_body, $private);   
+      $stmt_postDetails->bind_result($creator_id, $creator_name, $date, $title, $post_body, $private, $img_path);   
       $stmt_postDetails->fetch();
       $stmt_postDetails->close();
+      
+      if (!isset($img_path) || $img_path == "" || $img_path == NULL) {
+          $img_path = "../uploads/default.jpeg";
+      }
       // echo date_create_from_format('Y-m-d H:i:s', $date);
       // echo $date;
   } else {
@@ -85,7 +89,7 @@
       // $stmt_nextPost->close();
 
       // Query that retrieves the 3 most recent posts (by date) to display max 3 in the 'Latest Posts' section
-      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE creator_id = {$_SESSION['id']} OR private = 0 ORDER BY date DESC LIMIT 0,3")) {
+      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments, img_path FROM posts WHERE creator_id = {$_SESSION['id']} OR private = 0 ORDER BY date DESC LIMIT 0,3")) {
       } else {
           echo "failed query1";
       }
@@ -105,7 +109,7 @@
       }
 
       // Query that retrieves the 3 most recent PUBLIC posts (by post_id) to display max 3 in the 'Latest Posts' section
-      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3")) {
+      if ($stmt_latest = $con->prepare("SELECT post_id, creator_name, date, title, private, num_comments, img_path FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3")) {
       } else {
           echo "failed query1";
       }
@@ -244,7 +248,7 @@
         <main class="post blog-post col-lg-8"> 
           <div class="container">
             <div class="post-single">
-              <div class="post-thumbnail"><img src="../img/blog-post-3.jpeg" alt="..." class="img-fluid"></div>
+              <div class="post-thumbnail"><img src="<?php echo $img_path; ?>" alt="..." class="img-fluid"></div>
               <div class="post-details">
                 <!-- <div class="post-meta d-flex justify-content-between">
                   <div class="category"><a href="#">Business</a><a href="#">Financial</a></div>
@@ -315,11 +319,9 @@
                 <!-- JS that sends cookie storing comment_id to delete for access in deleteComment.php -->
                 <script type="text/Javascript">
                   $(document).ready(function() {
-                    console.log("ready");
                     $(document).on("click", ".open-DeleteCommentModal", function () {
                         var comment_id = $(this).data('id');
                         $(".modal-footer #comment_id").val( comment_id );
-                        console.log("clicked on: " + comment_id);
                         document.cookie = "comment_id = " + comment_id;
                         
                     });
@@ -437,7 +439,7 @@
                 for ($i = 0; $i < sizeof($results_latest); $i++) { ?>
                   <a href="post.php?post_id=<?php echo $results_latest[$i]['post_id']; if ($results_latest[$i]['private'] == 0): ?>&publicPost=1<?php endif; ?>">
                     <div class="item d-flex align-items-center">
-                      <div class="image"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></div>
+                      <div class="image"><img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "../uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid"></div>
                       <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
                         <div class="d-flex align-items-center">
                           <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>

@@ -34,7 +34,7 @@
     // Query that retrieves the 4 most recent posts by currently logged-in user in order from most recent --> least recent, depending on current page
     $limit_offset = ($_GET['page'] - 1) * 4;
     $limit_count = ($totalNumPosts - $limit_offset) < 4 ? $totalNumPosts - $limit_offset : 4;
-    if ($stmt_recentPosts = $con->prepare("SELECT post_id, creator_name, date, title, post_body, private, num_comments FROM posts WHERE private = 0 ORDER BY date DESC LIMIT " . $limit_offset . "," . $limit_count)) {
+    if ($stmt_recentPosts = $con->prepare("SELECT post_id, creator_name, date, title, post_body, private, num_comments, img_path FROM posts WHERE private = 0 ORDER BY date DESC LIMIT " . $limit_offset . "," . $limit_count)) {
         $stmt_recentPosts->execute();
         $result = $stmt_recentPosts->get_result();
         if ($result->num_rows > 0) {
@@ -52,7 +52,7 @@
     $stmt_recentPosts->close();
     
     // Query that retrieves the 3 most recent PUBLIC posts to display max 3 in the 'Latest Posts" section
-    if ($stmt_latest = $con->prepare('SELECT post_id, creator_name, date, title, private, num_comments FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3')) {
+    if ($stmt_latest = $con->prepare('SELECT post_id, creator_name, date, title, private, num_comments, img_path FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3')) {
         $stmt_latest->execute();
         $latest = $stmt_latest->get_result();
         if ($latest->num_rows > 0) {
@@ -157,7 +157,11 @@
               <?php if (isset($results)) {
                 for ($i = 0; $i < $limit_count; $i++) { ?>
                   <div class="post col-xl-6">
-                    <div class="post-thumbnail"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>&publicPost=1"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></a></div>
+                    <div class="post-thumbnail">
+                      <a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>&publicPost=1">
+                        <img src="<?php if (!isset($results[$i]['img_path']) || $results[$i]['img_path'] == "" || $results[$i]['img_path'] == NULL) { $results[$i]['img_path'] = "../uploads/default.jpeg"; echo $results[$i]['img_path']; } else { echo $results[$i]['img_path']; } ?>" alt="..." class="img-fluid">
+                      </a>
+                    </div>
                     <div class="post-details">
                       <div class="post-meta d-flex justify-content-between">
                         <div class="date meta-last"><?php echo date_format(date_create($results[$i]['date']), "d-M | Y"); ?></div>
@@ -258,7 +262,7 @@
                 for ($i = 0; $i < sizeof($results_latest); $i++) { ?>
                   <a href="post.php?post_id=<?php echo $results_latest[$i]['post_id']; if ($results_latest[$i]['private'] == 0): ?>&publicPost=1<?php endif; ?>">
                     <div class="item d-flex align-items-center">
-                      <div class="image"><img src="../img/mountains.jpg" alt="..." class="img-fluid"></div>
+                      <div class="image"><img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "../uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid"></div>
                       <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
                         <div class="d-flex align-items-center">
                           <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
