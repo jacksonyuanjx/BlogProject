@@ -68,7 +68,8 @@
         // Unset all newly declared session vars
         unset($_SESSION['postToDelete']);
         unset($_SESSION['imgToDelete']);
-        
+
+        $con->close();
     }
     
 ?>

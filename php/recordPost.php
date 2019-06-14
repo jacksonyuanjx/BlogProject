@@ -88,7 +88,7 @@
 
         } else {
             // NO file has been uploaded
-            $local_file_name = "";
+            $target_file = "";
         }
     }
 
@@ -104,6 +104,8 @@
         }
         $stmt->bind_param('issssis', $_SESSION['id'], $_SESSION['name'], $date, $_POST['title'], $_POST['post_body'], $private, $target_file);    // assigning creator_id as the id of the currently logged-in user, if $_POST['private'] == 1 then it's set
         $stmt->execute();
+        $stmt->close();
+
         $_SESSION['post_id'] = mysqli_insert_id($con);  // assigns to the most recent post_id
         // echo $_SESSION['post_id'];
         header("Location: post.php?post_id={$_SESSION['post_id']}");
@@ -113,7 +115,7 @@
         $_SESSION['error'] = "Failed to store post into db";
         echo 'Failed to store post into database';
     }
-    $stmt->close();
+    
     $con->close();
 
     // Use this to handle previous/next post situation instead of next/prev IDs

@@ -75,7 +75,7 @@
                 session_regenerate_id();   // use upon any transition in authentication state and ONLY at authentication transitions
                 $_SESSION['loggedin'] = TRUE;
                 $_SESSION['name'] = $_POST['username'];
-                $_SESSION['id'] = $id;
+                $_SESSION['id'] = mysqli_insert_id($con);
                 header("Location: ../index.php");
                 exit();
                 // echo 'you succesfuly registered, you can now login!'
@@ -84,10 +84,11 @@
             }
             $stmt_newUser->close();
         }
+        $stmt_Username->close();
+
     } else {
         // err w/ SQL stmt, could not get users
     }
-    $stmt_Username->close();
     $con->close();
     // SQL stmts close automatically at end of script?
 

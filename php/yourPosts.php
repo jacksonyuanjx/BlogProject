@@ -65,10 +65,10 @@
                 $results_latest[] = $row;
             }
         }
+        $stmt_latest->close();
     } else {
         echo "failed query1";
     }
-    $stmt_latest->close();
 
     $con->close();
     
@@ -286,9 +286,9 @@
                   }
                 } else {
                   // Case where there are 0 posts
-                  ?><li class="page-item"><a href="yourPosts.php?page=<?php echo $i; ?>" class="page-link active">1</a></li><?php
+                  ?><li class="page-item"><a href="yourPosts.php?page=1" class="page-link active">1</a></li><?php
                 } ?>
-                <?php if ($_GET['page'] != $totalNumPages) {
+                <?php if ($_GET['page'] != $totalNumPages && $totalNumPages != 0) {
                   ?><li class="page-item"><a href="yourPosts.php?page=<?php echo $_GET['page']+1; ?>" class="page-link"> <i class="fa fa-angle-right"></i></a></li><?php
                 } ?>
               </ul>
@@ -322,7 +322,7 @@
                       <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
                         <div class="d-flex align-items-center">
                           <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
-                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M | Y"); ?></div>
+                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M-Y"); ?></div>
                           <div class="comments"><i class="icon-comment"></i><?php echo $results_latest[$i]['num_comments']; ?></div>
                         </div>
                       </div>

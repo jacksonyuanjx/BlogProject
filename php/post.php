@@ -442,7 +442,7 @@
                       <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
                         <div class="d-flex align-items-center">
                           <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
-                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M | Y"); ?></div>
+                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M-Y"); ?></div>
                           <div class="comments"><i class="icon-comment"></i><?php echo $results_latest[$i]['num_comments']; ?></div>
                         </div>
                       </div>

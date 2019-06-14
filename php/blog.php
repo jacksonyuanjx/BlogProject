@@ -28,8 +28,9 @@
         // Assigning variables for pagination
         $totalNumPosts = $row->total;
         $totalNumPages = ceil($totalNumPosts / 4);  // Displaying 4 posts per page
+
+        $stmt_numPosts->close();
     }
-    $stmt_numPosts->close();
 
     // Query that retrieves the 4 most recent posts by currently logged-in user in order from most recent --> least recent, depending on current page
     $limit_offset = ($_GET['page'] - 1) * 4;
@@ -46,10 +47,10 @@
         } else {
           echo "it's 0";
         }
+        $stmt_recentPosts->close();
     } else {
         echo "failed query";
     }
-    $stmt_recentPosts->close();
     
     // Query that retrieves the 3 most recent PUBLIC posts to display max 3 in the 'Latest Posts" section
     if ($stmt_latest = $con->prepare('SELECT post_id, creator_name, date, title, private, num_comments, img_path FROM posts WHERE private = 0 ORDER BY date DESC LIMIT 0,3')) {
@@ -60,10 +61,10 @@
                 $results_latest[] = $row;
             }
         }
+        $stmt_latest->close();
     } else {
         echo "failed query 2";
     }
-    $stmt_latest->close();
 
     $con->close();
     
@@ -266,7 +267,7 @@
                       <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
                         <div class="d-flex align-items-center">
                           <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
-                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M | Y"); ?></div>
+                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M-Y"); ?></div>
                           <div class="comments"><i class="icon-comment"></i><?php echo $results_latest[$i]['num_comments']; ?></div>
                         </div>
                       </div>
