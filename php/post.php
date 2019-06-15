@@ -232,8 +232,11 @@
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="yourPosts.php" class="nav-link ">Your Posts</a></li>
                 <li class="nav-item"><a href="newPost.php" class="nav-link ">New Post</a></li>
-                <li class="nav-item"><a href="profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']?></a></li>
-                <li class="nav-item"><a href="logout.php" class="nav-link">Logout</a></li>
+                <li class="nav-item"><a href="profile.php" class="nav-link">
+                  <i class="fas fa-user-circle"></i>&nbsp;
+                  <?php echo substr($_SESSION['name'], 0, 15); ?></a>
+                </li>
+                <li class="nav-item"><a href="logout.php" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
               <?php elseif(!isset($_SESSION['loggedin']) || !isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="login.php" class="nav-link ">Login</a></li>
               <?php endif; ?>
@@ -322,7 +325,7 @@
                 <script type="text/Javascript">
                   $(document).ready(function() {
                     $(document).on("click", ".open-DeleteCommentModal", function () {
-                        var comment_id = $(this).data('id');
+                        var comment_id = $(this).attr('data-id');
                         document.cookie = "comment_id = " + comment_id;
                     });
                   });
@@ -441,8 +444,11 @@
                       <div class="image"><img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "../uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid"></div>
                       <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
                         <div class="d-flex align-items-center">
-                          <div class="views"><i class="fas fa-user-circle"></i><?php echo $results_latest[$i]['creator_name']; ?></div>
-                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M-Y"); ?></div>
+                          <div class="views"><i class="fas fa-user-circle"></i>
+                            <?php echo substr($results_latest[$i]['creator_name'], 0, 10); 
+                              if (strlen($results_latest[$i]['creator_name']) > 10): ?>..<?php endif; ?>
+                          </div>
+                          <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M"); ?></div>
                           <div class="comments"><i class="icon-comment"></i><?php echo $results_latest[$i]['num_comments']; ?></div>
                         </div>
                       </div>

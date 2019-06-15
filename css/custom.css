@@ -46,3 +46,37 @@
 	top:2px;
 }
 
+
+
+
+.profileModal {
+	width: 100%;
+	margin: 0 auto;
+}
+.profileModal h2 {
+	margin: 0;
+	padding: 25px 0;
+	font-size: 22px;
+	border-bottom: 1px solid #e0e0e3;
+	color: #4a536e;
+}
+.profileModal > p, .profileModal > div {
+	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+	margin: 25px 0;
+	padding: 25px;
+	background-color: #fff;
+}
+.profileModal > p table td, .profileModal > div table td {
+	padding: 5px;
+}
+.profileModal > p table td:first-child, .profileModal > div table td:first-child {
+	font-weight: bold;
+	color: #4a536e;
+	padding-right: 15px;
+}
+.profileModal > div p {
+	padding: 5px;
+	margin: 0 0 10px 0;
+}
+
+

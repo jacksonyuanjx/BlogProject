@@ -49,8 +49,7 @@
             }
 
             // Check file size
-            define('MB', 1048576);
-            $maxImgSize = 1 * MB;     // in bytes, 20971520 bytes = ~ 20 megabytes
+            define('MB', 1048576);     // in bytes, 1048576 bytes = 1 megabyte
             if ($_FILES["imgToUpload"]["size"] > 5*MB) {
                 // use session error incompelte_err
                 echo "Sorry, your file is too large.";
@@ -69,7 +68,7 @@
                 exit();
             }
 
-            // Attempt to upload image file
+            // Checking for duplicates, if found duplicate then rename by incrementing an int following the filename
             $increment = "";
             $local_file_name = str_replace(" ", "", $local_file_name);      // Remove all spaces in name before checking, will store with new name that has no spaces
             while (file_exists($target_dir . $local_file_name . $increment . '.' . $extension_lower)) {
@@ -79,6 +78,7 @@
 
             // $target_file = str_replace(" ", "", $target_file);
 
+            // Attempt to upload image file
             if (!move_uploaded_file($_FILES["imgToUpload"]["tmp_name"], $target_file)) {   
                 $_SESSION['incomplete_post_err'] = "There was a problem uploading the img";
                 // $_SESSION['incomplete_post_err'] = $target_file;
@@ -92,8 +92,7 @@
         }
     }
 
-
-
+    // Query that stores the new post
     if ($stmt = $con->prepare('INSERT INTO posts (creator_id, creator_name, date, title, post_body, private, img_path) VALUES (?,?,?,?,?,?,?)')) {
         date_default_timezone_set('Canada/Pacific');  // php Canada/Pacific timezone is closest to Vancouver time
         // Storing in 24-hr time

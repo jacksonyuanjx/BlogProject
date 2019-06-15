@@ -66,8 +66,11 @@
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="php/yourPosts.php" class="nav-link">Your Posts</a></li>
                 <li class="nav-item"><a href="php/newPost.php" class="nav-link "><i class="far fa-plus-square"></i> New Post</a></li>
-                <li class="nav-item"><a href="php/profile.php" class="nav-link"><i class="fas fa-user-circle"></i>&nbsp<?php echo $_SESSION['name']; ?></a></li>
-                <li class="nav-item"><a href="php/logout.php" class="nav-link">Logout</a></li>
+                <li class="nav-item"><a href="php/profile.php" class="nav-link">
+                  <i class="fas fa-user-circle"></i>&nbsp;
+                  <?php echo substr($_SESSION['name'], 0, 15); ?></a>
+                </li>
+                <li class="nav-item"><a href="php/logout.php" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
               <?php elseif(!isset($_SESSION['loggedin']) || !isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="php/login.php" class="nav-link ">Login</a></li>
               <?php endif; ?>
