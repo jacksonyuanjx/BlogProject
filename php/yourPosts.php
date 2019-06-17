@@ -34,6 +34,22 @@
     }
     $stmt_numPosts->close();
 
+    // Query that retrieves the userPfp_path of the currently logged-in user
+    if (isset($_SESSION['id'])) {
+        if ($stmt_pfp = $con->prepare("SELECT pfp_path FROM accounts WHERE id = ?")) {
+          $stmt_pfp->bind_param('i', $_SESSION['id']); 
+          $stmt_pfp->execute();
+          $stmt_pfp->bind_result($userPfp_path);
+          $stmt_pfp->fetch();
+          $stmt_pfp->close();
+        }
+    }
+
+    // Assigns to default pfp if no userPfp_path returned
+    if (!isset($_SESSION['id'], $userPfp_path) || $userPfp_path == "" || $userPfp_path == NULL) {
+        $userPfp_path = "../img/default_user.png";
+    }
+
     // Query that retrieves the 4 most recent posts by currently logged-in user in order from most recent --> least recent, depending on current page
     $limit_offset = ($_GET['page'] - 1) * 4;
     $limit_count = ($totalNumPosts - $limit_offset) < 4 ? $totalNumPosts - $limit_offset : 4;
@@ -143,7 +159,7 @@
                 <li class="nav-item"><a href="yourPosts.php" class="nav-link active">Your Posts</a></li>
                 <li class="nav-item"><a href="newPost.php" class="nav-link"><i class="far fa-plus-square"></i> New Post</a></li>
                 <li class="nav-item"><a href="profile.php" class="nav-link">
-                  <i class="fas fa-user-circle"></i>&nbsp;
+                  <div class="avatar" style="display: inline-block; width:25px; height: 25px;"><img src="<?php echo $userPfp_path; ?>" alt="..." class="avatar rounded-circle img-fluid"></div>&nbsp;
                   <?php echo substr($_SESSION['name'], 0, 15); ?></a>
                 </li>
                 <li class="nav-item"><a href="logout.php" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
@@ -207,9 +223,9 @@
                         <h3 class="h4"><?php echo $results[$i]['title']; ?></h3>
                       </a>
                       <!-- Displaying the first 100 characters of post, essentially a summary -->
-                      <p class="text-muted"><?php echo substr($results[$i]['post_body'], 0, 100) . "..."; ?></p>  
+                      <p class="text-muted"><?php if (strlen($results[$i]['post_body']) < 100) { echo $results[$i]['post_body']; } else { echo substr($results[$i]['post_body'], 0, 100) . "..."; } ?></p>  
                       <footer class="post-footer d-flex align-items-center"><a href="post.php?post_id=<?php echo $results[$i]['post_id']; ?>" class="author d-flex align-items-center flex-wrap">
-                          <div class="avatar"><img src="../img/user.svg" alt="..." class="img-fluid"></div>
+                          <div class="avatar"><img src="<?php echo $userPfp_path; ?>" alt="..." class="img-fluid"></div>
                           <div class="title"><span><?php echo $results[$i]['creator_name']; ?></span></div></a>
                           <div class="title">
                             <?php if ($results[$i]['private'] == 1) {
@@ -324,7 +340,7 @@
                       <div class="image"><img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "../uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid"></div>
                       <div class="title"><strong><?php echo $results_latest[$i]['title']; ?></strong>
                         <div class="d-flex align-items-center">
-                          <div class="views"><i class="fas fa-user-circle"></i><?php echo substr($results_latest[$i]['creator_name'], 0, 7); ?></div>
+                          <div class="views"><i class="fas fa-user-circle"></i><?php if (strlen($results_latest[$i]['creator_name']) <= 7) { echo $results_latest[$i]['creator_name']; } else { echo substr($results_latest[$i]['creator_name'], 0, 7) . ".."; } ?></div>
                           <div class="views"><?php echo date_format(date_create($results_latest[$i]['date']), "d-M-Y"); ?></div>
                           <div class="comments"><i class="icon-comment"></i><?php echo $results_latest[$i]['num_comments']; ?></div>
                         </div>

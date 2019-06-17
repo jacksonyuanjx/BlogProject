@@ -1,4 +1,67 @@
-<?php session_start(); ?>
+<?php 
+  session_start(); 
+  
+  $DATABASE_HOST = 'localhost';
+  $DATABASE_USER = 'root';
+  $DATABASE_PASS = '';
+  $DATABASE_NAME = 'blog_db';
+
+  $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+  if ( mysqli_connect_errno() ) {
+    // If there is an error with the connection, stop the script and display the error.
+    die ('Failed to connect to MySQL: ' . mysqli_connect_error());
+  }
+
+  if (isset($_SESSION['loggedin'], $_SESSION['id'])) {
+
+    // Query that retrieves the pfp_path of the currently logged-in user
+    if ($stmt_pfp = $con->prepare("SELECT pfp_path FROM accounts WHERE id = ?")) {
+      $stmt_pfp->bind_param('i', $_SESSION['id']); 
+      $stmt_pfp->execute();
+      $stmt_pfp->bind_result($pfp_path);
+      $stmt_pfp->fetch();
+      $stmt_pfp->close();
+
+      $pfp_path = str_replace("../", "", $pfp_path);  // Remove "../" from "../uploads/..."
+    }
+  }
+
+  // Assigns to default pfp if no pfp_path returned
+  if (!isset($pfp_path) || $pfp_path == "" || $pfp_path == NULL) {
+    $pfp_path = "img/default_user.png";
+  }
+
+  // LEFT JOIN Query that retrieves the 3 most recent posts and the corresponding author's pfp_path to display max 3 posts on home page
+  if ($stmt_latest = $con->prepare("SELECT p.post_id, p.creator_name, p.date, p.title, p.post_body, p.private, p.num_comments, p.img_path, a.pfp_path FROM posts p LEFT JOIN accounts a ON p.creator_id = a.id WHERE p.creator_id = ? OR p.private = 0 ORDER BY p.date DESC LIMIT 0,3")) {
+      $stmt_latest->bind_param('i', $_SESSION['id']);
+      $stmt_latest->execute();
+      $latest = $stmt_latest->get_result();
+      if ($latest->num_rows > 0) {
+          $i = 0;
+          while ($row = mysqli_fetch_array($latest)) {
+              $results_latest[] = $row;
+
+              // If there's already an img assigned to the post, trim "../" from the path b/c index.php is in the root dir
+              if (isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] != "" || $results_latest[$i]['img_path'] != NULL) {
+                $results_latest[$i]['img_path'] = str_replace("../", "", $results_latest[$i]['img_path']);
+              }
+              
+              // Assign default_user as pfp if no pfp_path returned, o.w. remove "../" from path since index.php is already in root dir
+              if (!isset($results_latest[$i]['pfp_path']) || $results_latest[$i]['pfp_path'] == "" || $results_latest[$i]['pfp_path'] == NULL) {
+                $results_latest[$i]['pfp_path'] = "img/default_user.png";
+              } else {
+                $results_latest[$i]['pfp_path'] = str_replace("../", "", $results_latest[$i]['pfp_path']);
+              }
+              $i++;
+          }
+      }
+      $stmt_latest->close();
+  } else {
+      echo "failed query1";
+  }
+
+  $con->close();
+?>
 
 <!DOCTYPE html>
 <html>
@@ -67,7 +130,7 @@
                 <li class="nav-item"><a href="php/yourPosts.php" class="nav-link">Your Posts</a></li>
                 <li class="nav-item"><a href="php/newPost.php" class="nav-link "><i class="far fa-plus-square"></i> New Post</a></li>
                 <li class="nav-item"><a href="php/profile.php" class="nav-link">
-                  <i class="fas fa-user-circle"></i>&nbsp;
+                  <div class="avatar" style="display: inline-block; width:25px; height: 25px;"><img src="<?php echo $pfp_path; ?>" alt="..." class="avatar rounded-circle img-fluid"></div>&nbsp;
                   <?php echo substr($_SESSION['name'], 0, 15); ?></a>
                 </li>
                 <li class="nav-item"><a href="php/logout.php" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
@@ -81,6 +144,7 @@
         </div>
       </nav>
     </header>
+
     <!-- Hero Section-->
     <section style="background: url(img/mountains.jpg); background-size: cover; background-position: center center" class="hero">
       <div class="container">
@@ -93,6 +157,7 @@
         <!-- <a href=".intro" class="continue link-scroll"><i class="fas fa-arrow-down"></i> Scroll Down</a> -->
       </div>
     </section>
+
     <!-- Intro Section-->
     <section class="intro">
       <div class="container">
@@ -110,75 +175,56 @@
         </div>
       </div>
     </section>
+
     <section class="featured-posts no-padding-top">
       <div class="container">
-        <!-- Post-->
-        <div class="row d-flex align-items-stretch">
-          <div class="text col-lg-7">
-            <div class="text-inner d-flex align-items-center">
-              <div class="content">
-                <header class="post-header">
-                  <div class="category"><a href="#">Business</a><a href="#">Technology</a></div><a href="post.html">
-                    <h2 class="h4">Alberto Savoia Can Teach You About Interior</h2></a>
-                </header>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrude consectetur adipisicing elit, sed do eiusmod tempor incididunt.</p>
-                <footer class="post-footer d-flex align-items-center"><a href="#" class="author d-flex align-items-center flex-wrap">
-                    <div class="avatar"><img src="img/avatar-1.jpg" alt="..." class="img-fluid"></div>
-                    <div class="title"><span>John Doe</span></div></a>
-                  <div class="date"><i class="icon-clock"></i> 2 months ago</div>
-                  <div class="comments"><i class="icon-comment"></i>12</div>
-                </footer>
-              </div>
-            </div>
-          </div>
-          <div class="image col-lg-5"><img src="img/featured-pic-1.jpeg" alt="..."></div>
-        </div>
-        <!-- Post        -->
-        <div class="row d-flex align-items-stretch">
-          <div class="image col-lg-5"><img src="img/featured-pic-2.jpeg" alt="..."></div>
-          <div class="text col-lg-7">
-            <div class="text-inner d-flex align-items-center">
-              <div class="content">
-                <header class="post-header">
-                  <div class="category"><a href="#">Business</a><a href="#">Technology</a></div><a href="post.html">
-                    <h2 class="h4">Alberto Savoia Can Teach You About Interior</h2></a>
-                </header>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrude consectetur adipisicing elit, sed do eiusmod tempor incididunt.</p>
-                <footer class="post-footer d-flex align-items-center"><a href="#" class="author d-flex align-items-center flex-wrap">
-                    <div class="avatar"><img src="img/avatar-2.jpg" alt="..." class="img-fluid"></div>
-                    <div class="title"><span>John Doe</span></div></a>
-                  <div class="date"><i class="icon-clock"></i> 2 months ago</div>
-                  <div class="comments"><i class="icon-comment"></i>12</div>
-                </footer>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Post                            -->
-        <div class="row d-flex align-items-stretch">
-          <div class="text col-lg-7">
-            <div class="text-inner d-flex align-items-center">
-              <div class="content">
-                <header class="post-header">
-                  <div class="category"><a href="#">Business</a><a href="#">Technology</a></div><a href="post.html">
-                    <h2 class="h4">Alberto Savoia Can Teach You About Interior</h2></a>
-                </header>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrude consectetur adipisicing elit, sed do eiusmod tempor incididunt.</p>
-                <footer class="post-footer d-flex align-items-center"><a href="#" class="author d-flex align-items-center flex-wrap">
-                    <div class="avatar"><img src="img/avatar-3.jpg" alt="..." class="img-fluid"></div>
-                    <div class="title"><span>John Doe</span></div></a>
-                  <div class="date"><i class="icon-clock"></i> 2 months ago</div>
-                  <div class="comments"><i class="icon-comment"></i>12</div>
-                </footer>
-              </div>
-            </div>
-          </div>
-          <div class="image col-lg-5"><img src="img/featured-pic-3.jpeg" alt="..."></div>
-        </div>
+        <header> 
+          <h2>Latest from the blog</h2>
+          <p class="text-big">Just the latest of the many posts on this blog</p>
+        </header>
+
+        <?php 
+            for ($i = 0; $i < sizeof($results_latest); $i++) { ?>
+                <!-- Post-->
+                <div class="row d-flex align-items-stretch">
+                  <?php if ($i % 2 != 0) { ?>
+                    <div class="image col-lg-5">
+                      <img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid">
+                    </div> <?php
+                  } ?>
+                  <div class="text col-lg-7">
+                    <div class="text-inner d-flex align-items-center">
+                      <div class="content">
+                        <header class="post-header">
+                          <!-- <div class="category"><a href="#">Business</a><a href="#">Technology</a></div><a href="post.html"> -->
+                            <h2 class="h4"><?php echo $results_latest[$i]['title']; ?></h2></a>
+                        </header>
+                        <p><?php if (strlen($results_latest[$i]['post_body']) < 100) { echo $results_latest[$i]['post_body']; } else { echo substr($results_latest[$i]['post_body'], 0, 100) . "..."; } ?></p>
+                        <footer class="post-footer d-flex align-items-center"><a href="#" class="author d-flex align-items-center flex-wrap">
+                            <div class="avatar">
+                              <img src="<?php echo $results_latest[$i]['pfp_path']; ?>" alt="..." class="img-fluid">
+                            </div>
+                            <div class="title"><span><?php echo $results_latest[$i]['creator_name']; ?></span></div></a>
+                          <div class="date"><i class="icon-clock"></i> <?php echo date_format(date_create($results_latest[$i]['date']), "d-M | Y"); ?></div>
+                          <div class="comments"><i class="icon-comment"></i><?php echo $results_latest[$i]['num_comments']; ?></div>
+                        </footer>
+                      </div>
+                    </div>
+                  </div>
+                  <?php if ($i % 2 == 0) { ?>
+                    <div class="image col-lg-5">
+                      <img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid">
+                    </div> <?php
+                  } ?>
+                </div> <?php
+            }
+        ?>
+        
       </div>
     </section>
+
     <!-- Divider Section-->
-    <section style="background: url(img/divider-bg.jpg); background-size: cover; background-position: center bottom" class="divider">
+    <!-- <section style="background: url(img/divider-bg.jpg); background-size: cover; background-position: center bottom" class="divider">
       <div class="container">
         <div class="row">
           <div class="col-md-7">
@@ -186,9 +232,10 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
+
     <!-- Latest Posts -->
-    <section class="latest-posts"> 
+    <!-- <section class="latest-posts"> 
       <div class="container">
         <header> 
           <h2>Latest from the blog</h2>
@@ -230,9 +277,10 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
+
     <!-- Newsletter Section-->
-    <section class="newsletter no-padding-top">    
+    <!-- <section class="newsletter no-padding-top">    
       <div class="container">
         <div class="row">
           <div class="col-md-6">
@@ -251,9 +299,10 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
+
     <!-- Gallery Section-->
-    <section class="gallery no-padding">    
+    <!-- <section class="gallery no-padding">    
       <div class="row">
         <div class="mix col-lg-3 col-md-3 col-sm-6">
           <div class="item"><a href="img/gallery-1.jpg" data-fancybox="gallery" class="image"><img src="img/gallery-1.jpg" alt="..." class="img-fluid">
@@ -272,7 +321,8 @@
               <div class="overlay d-flex align-items-center justify-content-center"><i class="icon-search"></i></div></a></div>
         </div>
       </div>
-    </section>
+    </section> -->
+
     <!-- Page Footer-->
     <footer class="main-footer">
       <div class="container">

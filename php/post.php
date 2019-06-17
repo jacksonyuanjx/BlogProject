@@ -36,22 +36,46 @@
     // }
   }
 
-  if ($stmt_postDetails = $con->prepare('SELECT creator_id, creator_name, date, title, post_body, private, img_path FROM posts WHERE post_id = ?')) {
+  // Query that retrieves the userPfp_path of the currently logged-in user
+  if (isset($_SESSION['id'])) {
+    if ($stmt_pfp = $con->prepare("SELECT pfp_path FROM accounts WHERE id = ?")) {
+      $stmt_pfp->bind_param('i', $_SESSION['id']); 
+      $stmt_pfp->execute();
+      $stmt_pfp->bind_result($userPfp_path);
+      $stmt_pfp->fetch();
+      $stmt_pfp->close();
+    }
+  }
+
+  // Assigns to default pfp if no userPfp_path returned
+  if (!isset($_SESSION['id'], $userPfp_path) || $userPfp_path == "" || $userPfp_path == NULL) {
+    $userPfp_path = "../img/default_user.png";
+  }
+
+  // LEFT JOIN Query that retrieves the current post's details as well as the author's profile picture (pfp)
+  if ($stmt_postDetails = $con->prepare("SELECT p.creator_id, p.creator_name, p.date, p.title, p.post_body, p.private, p.img_path, a.pfp_path FROM posts p LEFT JOIN accounts a ON p.creator_id = a.id WHERE p.post_id = ? ")) {
       // Binding parameter
       $stmt_postDetails->bind_param('i', $_SESSION['post_id']);
       $stmt_postDetails->execute();
       // $stmt_postDetails->store_result();  // Storing result to assign to variables for displaying in html
       
       // Assigning query results into variables
-      $stmt_postDetails->bind_result($creator_id, $creator_name, $date, $title, $post_body, $private, $img_path);   
+      $stmt_postDetails->bind_result($creator_id, $creator_name, $date, $title, $post_body, $private, $img_path, $pfp_path);   
       $stmt_postDetails->fetch();
       $stmt_postDetails->close();
       
       $_SESSION['creator_id'] = $creator_id;
 
+      // Assign to default picture if no img_path returned
       if (!isset($img_path) || $img_path == "" || $img_path == NULL) {
           $img_path = "../uploads/default.jpeg";
       }
+
+      // Assigns to default pfp if no pfp_path returned
+      if (!isset($pfp_path) || $pfp_path == "" || $pfp_path == NULL) {
+        $pfp_path = "../img/default_user.png";
+      }
+
       // echo date_create_from_format('Y-m-d H:i:s', $date);
       // echo $date;
   } else {
@@ -231,9 +255,9 @@
               <!-- <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li> -->
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="yourPosts.php" class="nav-link ">Your Posts</a></li>
-                <li class="nav-item"><a href="newPost.php" class="nav-link ">New Post</a></li>
+                <li class="nav-item"><a href="newPost.php" class="nav-link "><i class="far fa-plus-square"></i> New Post</a></li>
                 <li class="nav-item"><a href="profile.php" class="nav-link">
-                  <i class="fas fa-user-circle"></i>&nbsp;
+                  <div class="avatar" style="display: inline-block; width:25px; height: 25px;"><img src="<?php echo $userPfp_path; ?>" alt="..." class="avatar rounded-circle img-fluid"></div>&nbsp;
                   <?php echo substr($_SESSION['name'], 0, 15); ?></a>
                 </li>
                 <li class="nav-item"><a href="logout.php" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
@@ -263,7 +287,7 @@
                   <!-- <a href="#"><i class="fa fa-bookmark-o"></i></a> -->
                 </h1>
                 <div class="post-footer d-flex align-items-center flex-column flex-sm-row"><a href="#" class="author d-flex align-items-center flex-wrap">
-                    <div class="avatar"><img src="../img/user.svg" alt="..." class="img-fluid"></div>
+                    <div class="avatar"><img src="<?php echo $pfp_path; ?>" alt="..." class="avatar img-fluid"></div>
                     <div class="title"><span><?php echo $creator_name; ?></span></div></a>
                   <div class="d-flex align-items-center flex-wrap">       
                     <div class="date"><i class="icon-clock"></i><?php echo date_format(date_create($date), "h:i A | d-M Y"); ?></div>

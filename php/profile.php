@@ -28,8 +28,9 @@
 		$stmt->fetch();
 		$stmt->close();
 
+		// Assigns to default pfp if no pfp_path returned
 		if (!isset($pfp_path) || $pfp_path == "" || $pfp_path == NULL) {
-			$pfp_path = "../uploads/default_user.png";
+			$pfp_path = "../img/default_user.png";
 		}
 	}
 	
@@ -100,14 +101,14 @@
           <div id="navbarcollapse" class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
               <li class="nav-item"><a href="../index.php" class="nav-link ">Home</a></li>
-              <li class="nav-item"><a href="blog.php" class="nav-link active">Blog</a></li>
+              <li class="nav-item"><a href="blog.php" class="nav-link">Blog</a></li>
               <!-- <li class="nav-item"><a href="post.php" class="nav-link ">Post</a></li> -->
               <?php if (isset($_SESSION['loggedin']) && isset($_SESSION['name'])): ?>
                 <li class="nav-item"><a href="yourPosts.php" class="nav-link ">Your Posts</a></li>
                 <li class="nav-item"><a href="newPost.php" class="nav-link"><i class="far fa-plus-square"></i> New Post</a></li>
-                <li class="nav-item"><a href="profile.php" class="nav-link">
-                  <i class="fas fa-user-circle"></i>&nbsp;
-                  <?php echo substr($_SESSION['name'], 0, 15); ?></a>
+                <li class="nav-item"><a href="profile.php" class="nav-link active">
+					<div class="avatar" style="display: inline-block; width:25px; height: 25px;"><img src="<?php echo $pfp_path; ?>" alt="..." class="avatar rounded-circle img-fluid"></div>&nbsp;
+                  	<?php echo substr($_SESSION['name'], 0, 15); ?></a>
                 </li>
                 <li class="nav-item"><a href="logout.php" class="nav-link">Logout</a></li>
               <?php elseif(!isset($_SESSION['loggedin']) || !isset($_SESSION['name'])): ?>

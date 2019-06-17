@@ -74,7 +74,7 @@
                 // Image upload was successful
                 // Delete the old profile pic to save space on database and prevent unused images
                 if (isset($_SESSION['currPfpPath'])) {
-                    if ($_SESSION['currPfpPath'] != "../uploads/default_user.png") {
+                    if ($_SESSION['currPfpPath'] != "../img/default_user.png") {
                         if (!unlink($_SESSION['currPfpPath'])) {
                             // Deletion failed
                             $_SESSION['pfp_err'] = "Failed to delete previous profile pic. Please contact blog developer";
