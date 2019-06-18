@@ -32,8 +32,7 @@
   }
 
   // LEFT JOIN Query that retrieves the 3 most recent posts and the corresponding author's pfp_path to display max 3 posts on home page
-  if ($stmt_latest = $con->prepare("SELECT p.post_id, p.creator_name, p.date, p.title, p.post_body, p.private, p.num_comments, p.img_path, a.pfp_path FROM posts p LEFT JOIN accounts a ON p.creator_id = a.id WHERE p.creator_id = ? OR p.private = 0 ORDER BY p.date DESC LIMIT 0,3")) {
-      $stmt_latest->bind_param('i', $_SESSION['id']);
+  if ($stmt_latest = $con->prepare("SELECT p.post_id, p.creator_name, p.date, p.title, p.post_body, p.private, p.num_comments, p.img_path, a.pfp_path FROM posts p LEFT JOIN accounts a ON p.creator_id = a.id WHERE p.private = 0 ORDER BY p.date DESC LIMIT 0,3")) {
       $stmt_latest->execute();
       $latest = $stmt_latest->get_result();
       if ($latest->num_rows > 0) {
@@ -68,7 +67,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>BlogProject</title>
+    <title>Tol Project</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="all,follow">
@@ -116,7 +115,7 @@
         <div class="container">
           <!-- Navbar Brand -->
           <div class="navbar-header d-flex align-items-center justify-content-between">
-            <!-- Navbar Brand --><a href="index.php" class="navbar-brand">BlogProject</a>
+            <!-- Navbar Brand --><a href="index.php" class="navbar-brand">PROJECT TOL</a>
             <!-- Toggle Button-->
             <button type="button" data-toggle="collapse" data-target="#navbarcollapse" aria-controls="navbarcollapse" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"><span></span><span></span><span></span></button>
           </div>
@@ -150,7 +149,7 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-7">
-            <h1>BlogProject</h1>
+            <h1>PROJECT TOL</h1>
             <a href=".intro" class="hero-link link-scroll">Discover More &nbsp;<i class="fas fa-arrow-down"></i></a>
           </div>
         </div>
@@ -163,13 +162,13 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-8">
-            <h2 class="h3">A place to share</h2>
+            <h2 class="h3">PROJECT TOL (Tree of Life) -  A Place to Share and for Knowledge to Grow</h2>
             <p class="text-big">This blog was developed primarily for my younger sister for the purpose of allowing her to write daily journals. The blog is developed 
               using PHP 7, MySQL, HTML 5, and CSS 3 (Bootstrap). 
               <br/><br/>
-              Currently, the blog enables public/private postings as well as log-in authentication and account creation. 
+              Currently, the blog enables users to write public/private postings (w/ images attached) as well as 
+              <strong>log-in authentication, account creation, password reset via an emailed link following SMTP</strong> and many other cool features!
               <br/>
-              .... in development
             </p>
           </div>
         </div>
@@ -189,7 +188,9 @@
                 <div class="row d-flex align-items-stretch">
                   <?php if ($i % 2 != 0) { ?>
                     <div class="image col-lg-5">
-                      <img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid">
+                      <a href="php/post.php?post_id=<?php echo $results_latest[$i]['post_id']; ?>&publicPost=1">
+                        <img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid">
+                      </a>
                     </div> <?php
                   } ?>
                   <div class="text col-lg-7">
@@ -197,7 +198,11 @@
                       <div class="content">
                         <header class="post-header">
                           <!-- <div class="category"><a href="#">Business</a><a href="#">Technology</a></div><a href="post.html"> -->
-                            <h2 class="h4"><?php echo $results_latest[$i]['title']; ?></h2></a>
+                            <h2 class="h4">
+                              <a href="php/post.php?post_id=<?php echo $results_latest[$i]['post_id']; ?>&publicPost=1">
+                                <?php echo $results_latest[$i]['title']; ?>
+                              </a>
+                            </h2>
                         </header>
                         <p><?php if (strlen($results_latest[$i]['post_body']) < 100) { echo $results_latest[$i]['post_body']; } else { echo substr($results_latest[$i]['post_body'], 0, 100) . "..."; } ?></p>
                         <footer class="post-footer d-flex align-items-center"><a href="#" class="author d-flex align-items-center flex-wrap">
@@ -213,7 +218,9 @@
                   </div>
                   <?php if ($i % 2 == 0) { ?>
                     <div class="image col-lg-5">
-                      <img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid">
+                      <a href="php/post.php?post_id=<?php echo $results_latest[$i]['post_id']; ?>&publicPost=1">
+                        <img src="<?php if (!isset($results_latest[$i]['img_path']) || $results_latest[$i]['img_path'] == "" || $results_latest[$i]['img_path'] == NULL) { $results_latest[$i]['img_path'] = "uploads/default.jpeg"; echo $results_latest[$i]['img_path']; } else { echo $results_latest[$i]['img_path']; } ?>" alt="..." class="img-fluid">
+                      </a>
                     </div> <?php
                   } ?>
                 </div> <?php
@@ -328,39 +335,28 @@
       <div class="container">
         <div class="row">
           <div class="col-md-4">
-            <div class="logo">
-              <h6 class="text-white">Bootstrap Blog</h6>
-            </div>
-            <div class="contact-details">
-              <p>53 Broadway, Broklyn, NY 11249</p>
-              <p>Phone: (020) 123 456 789</p>
-              <p>Email: <a href="mailto:info@company.com">Info@Company.com</a></p>
-              <ul class="social-menu">
-                <li class="list-inline-item"><a href="#"><i class="fa fa-facebook"></i></a></li>
-                <li class="list-inline-item"><a href="#"><i class="fa fa-twitter"></i></a></li>
-                <li class="list-inline-item"><a href="#"><i class="fa fa-instagram"></i></a></li>
-                <li class="list-inline-item"><a href="#"><i class="fa fa-behance"></i></a></li>
-                <li class="list-inline-item"><a href="#"><i class="fa fa-pinterest"></i></a></li>
+              <ul class="list-inline social-buttons">
+                <li class="list-inline-item">
+                  Developer Contact:
+                </li>
+                <li class="list-inline-item">
+                  <a href="https://github.com/JacksonYuanjx" target="_blank">
+                    <i class="fab fa-github"></i>
+                  </a>
+                </li>
+                <li class="list-inline-item">
+                  <a href="https://www.linkedin.com/in/jackson-yuan/" target="_blank">
+                    <i class="fab fa-linkedin-in"></i>
+                  </a>
+                </li>
+                <li class="list-inline-item">
+                  <a href="mailto:jacksonyuanjx@hotmail.com?subject=Contact Request">
+                    <i class="fas fa-envelope"></i>
+                  </a>
+                </li>
               </ul>
-            </div>
           </div>
-          <div class="col-md-4">
-            <div class="menus d-flex">
-              <ul class="list-unstyled">
-                <li> <a href="#">My Account</a></li>
-                <li> <a href="#">Add Listing</a></li>
-                <li> <a href="#">Pricing</a></li>
-                <li> <a href="#">Privacy &amp; Policy</a></li>
-              </ul>
-              <ul class="list-unstyled">
-                <li> <a href="#">Our Partners</a></li>
-                <li> <a href="#">FAQ</a></li>
-                <li> <a href="#">How It Works</a></li>
-                <li> <a href="#">Contact</a></li>
-              </ul>
-            </div>
-          </div>
-          <div class="col-md-4">
+          <!-- <div class="col-md-4">
             <div class="latest-posts"><a href="#">
                 <div class="post d-flex align-items-center">
                   <div class="image"><img src="img/small-thumbnail-1.jpg" alt="..." class="img-fluid"></div>
@@ -374,14 +370,15 @@
                   <div class="image"><img src="img/small-thumbnail-3.jpg" alt="..." class="img-fluid"></div>
                   <div class="title"><strong>Best coffee shops in Sydney</strong><span class="date last-meta">October 26, 2016</span></div>
                 </div></a></div>
-          </div>
+          </div> -->
+
         </div>
       </div>
       <div class="copyrights">
         <div class="container">
           <div class="row">
             <div class="col-md-6">
-              <p>&copy; 2017. All rights reserved. Your great site.</p>
+              <p>&copy; 2019. All rights reserved. PROJECT TOL</p>
             </div>
             <div class="col-md-6 text-right">
               <p>Template By <a href="https://bootstraptemple.com" class="text-white">Bootstrap Temple</a>

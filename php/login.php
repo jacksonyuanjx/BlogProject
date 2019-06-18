@@ -75,7 +75,7 @@
 						</div>
 
 						<div>
-							<a href="#" class="txt3">
+							<a href="forgotPassword.php" class="txt3">
 								Forgot Password?
 							</a>
 						</div>
